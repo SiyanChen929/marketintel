@@ -1,0 +1,134 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Market Intel · Universe</title>
+<link rel="stylesheet" href="/static/base.css"><script src="/static/base.js"></script>
+<style>
+body.universe-page .filters{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+body.universe-page .filters label{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);min-height:36px}
+body.universe-page .filters label.chk{cursor:pointer}
+body.universe-page .filters input[type=checkbox]{width:16px;height:16px;margin:0}
+body.universe-page .mobile-listbar{display:none}
+@media(min-width:761px){
+ body.universe-page header.top{display:grid;grid-template-columns:auto auto 1fr auto;gap:4px 12px}
+ body.universe-page header.top h1{grid-column:1;grid-row:1}
+ body.universe-page header.top .sub{grid-column:2;grid-row:1}
+ body.universe-page header.top nav.tabs{grid-column:3;grid-row:1}
+ body.universe-page header.top>#btn-theme{grid-column:4;grid-row:1}
+ body.universe-page header.top .hdr{grid-column:1/-1;grid-row:2;margin-left:0;width:100%;justify-content:flex-start}
+}
+@media(max-width:760px){
+ body.universe-page header.top{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto auto;gap:4px 8px}
+ body.universe-page header.top h1{grid-column:1;grid-row:1}
+ body.universe-page header.top nav.tabs{grid-column:2;grid-row:1;width:100%;flex:none}
+ body.universe-page header.top>#btn-theme{grid-column:3;grid-row:1;margin-left:0}
+ body.universe-page header.top .hdr{grid-column:1/-1;grid-row:2;width:100%;margin-left:0}
+ body.universe-page .panel .head{align-items:flex-start}
+ body.universe-page #uni-panel .head{display:block}
+ body.universe-page #uni-panel .filters{margin-top:8px;gap:4px 8px}
+ body.universe-page #uni-panel .filters label:not(.chk){flex:1 1 calc(50% - 4px);display:grid;gap:2px}
+ body.universe-page #uni-panel .filters select{width:100%}
+ body.universe-page #uni-panel #f-q{flex:1 1 100%;width:100%;min-width:0!important}
+ body.universe-page #uni-panel #cnt{flex:1 1 100%}
+ body.universe-page .mobile-listbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 0 2px;border-top:1px solid var(--grid)}
+ body.universe-page .mobile-listbar .small{margin-right:auto}
+ body.universe-page .mobile-listbar .chip.btn{padding:6px 10px}
+ body.universe-page #uni-panel>.cards{gap:6px}
+ body.universe-page #uni-panel>.cards .card{padding:7px 9px}
+ body.universe-page #uni-panel>.cards .cm{gap:1px 10px;margin-top:4px}
+ body.universe-page #rank-panel .plot.tall,body.universe-page #vg-panel .plot.tall{min-height:280px}
+}
+</style></head>
+<body class="universe-page">
+<header class="top"><h1>Market Intel</h1><span class="sub">stock selection · universe screen</span><nav class="tabs" id="nav"></nav><div class="chips hdr" id="hdr"></div><button type="button" class="chip btn" id="btn-theme" aria-pressed="false" aria-label="Switch theme">◐</button></header>
+<main class="g2">
+ <div id="banner" style="grid-column:1/-1"></div>
+ <section class="panel wide" id="uni-panel"><div class="head"><h2>Universe table</h2><div class="filters" role="group" aria-label="Universe filters"><label>Segment <select id="f-seg" aria-label="Segment"><option value="">all segments</option></select></label><label>Style <select id="f-style" aria-label="Style"><option value="">all styles</option></select></label><label class="chk"><input type="checkbox" id="f-elig"> eligible only</label><label class="chk"><input type="checkbox" id="f-hold"> target list only</label><input type="search" id="f-q" aria-label="Search ticker or name" placeholder="search ticker / name" style="min-width:160px"><span class="small" id="cnt" role="status" aria-live="polite"></span></div></div>
+  <div class="mobile-listbar" id="mobile-listbar" hidden aria-label="Mobile universe list controls"><span class="small" id="m-scope-label"></span><button type="button" class="chip btn" id="m-scope">Show all</button><button type="button" class="chip btn" id="m-prev" hidden>Previous</button><span class="small" id="m-page" hidden></span><button type="button" class="chip btn" id="m-next" hidden>Next</button></div>
+  <div class="tblwrap scroll"><table id="uni"><caption class="sr-only">Universe screen: scores, valuation, growth and event columns per name; sortable</caption><thead><tr><th data-k="rank_eligible">#</th><th data-k="ticker">Ticker</th><th data-k="segment">Segment</th><th data-k="style">Style</th><th class="num" data-k="composite">Composite</th><th class="num" data-k="score_growth">Growth</th><th class="num" data-k="score_momentum">Mom.</th><th class="num" data-k="score_value">Value</th><th class="num" data-k="score_quality">Quality</th><th class="num" data-k="score_scarcity" title="Scarcity pillar - strategic scarcity / substitutability. Weight 15% of the composite. Higher = scarcer. * = partial coverage (weaker evidence, fewer inputs).">Scarcity</th><th class="num" data-k="score_risk" title="Risk RESILIENCE pillar - higher means SAFER, not riskier. Weight 10% of the composite (positive sign). * = partial coverage (weaker evidence, fewer inputs).">Risk (resilience)</th><th class="num" data-k="upside">Upside</th><th class="num" data-k="market_cap">Mkt cap</th><th class="num" data-k="ev_sales_ntm">EV/S NTM</th><th class="num" data-k="pe_ntm">P/E NTM</th><th class="num" data-k="rev_growth_ntm">Rev g NTM</th><th class="num" data-k="gross_margin">GM</th><th class="num" data-k="fcf_margin">FCF m</th><th class="num" data-k="eps_rev_90d">EPS rev 90d</th><th class="num" data-k="ret_3m">3M</th><th class="num" data-k="ret_12m">12M</th><th class="num" data-k="event_score_7d">Event 7d</th><th data-k="event_level">Level</th><th data-k="next_earnings">Earnings</th><th data-k="risk_flags">Risk flags</th></tr></thead><tbody></tbody></table></div></section>
+ <section class="panel" id="funnel-panel"><div class="head"><h2>Screening funnel</h2></div><div id="p-funnel" class="plot short"></div></section>
+ <section class="panel" id="rank-panel"><div class="head"><h2>Composite ranking (top 40)</h2><span class="small">target-list names highlighted</span></div><div id="p-rank" class="plot tall"></div></section>
+ <section class="panel wide" id="vg-panel"><div class="head"><h2>Valuation vs growth</h2><span class="small">EV / NTM sales (log) vs NTM revenue growth · bubble = market cap · target list in colour, rest grey · click a marker for detail</span></div><div id="p-vg" class="plot tall"></div></section>
+ <section class="panel wide" id="seg-panel"><div class="head"><h2>Segments</h2></div><div class="tblwrap"><table id="seg"><caption class="sr-only">Segment summary table</caption><thead></thead><tbody></tbody></table></div></section>
+</main>
+<script>
+// A pillar score with no underlying coverage is NOT zero - the scorer fills it with 0.0 so the composite can
+// still be summed, but that filled value must never be shown as if it were a measurement.
+function pillarCell(v,cov,label,flags){
+ if(v===null||v===undefined)
+   return `<span class="na" title="${esc(window.t('{label}: unavailable — no value for this name in this run',{label:window.t(label)}))}">${esc(window.t('unavailable'))}</span>`;
+ if(cov!==null&&cov!==undefined&&Number(cov)<=0)
+   return `<span class="na" title="${esc(window.t('{label}: unavailable — source coverage is 0 in this run, so the 0.00 in the artifact is a fill, not a measurement',{label:window.t(label)}))}">${esc(window.t('unavailable'))}</span>`;
+ // Partial coverage means the pillar rests on fewer inputs than a full one - weaker EVIDENCE. It says
+ // nothing about age: this payload carries no as-of or vintage for a pillar, so freshness is not claimed.
+ const partial=(cov!==null&&cov!==undefined&&Number(cov)<1);
+ const tip=(partial?window.t('{label}: partial coverage {coverage}% — weaker evidence (fewer inputs), not a staleness claim',{label:window.t(label),coverage:(Number(cov)*100).toFixed(0)}):window.t(label))
+   +(flags?window.t(' · flags: {flags}',{flags}):'');
+ return `<span title="${esc(tip)}"${partial?' class="partial"':''}>${fmt.num(v)}${partial?'*':''}</span>`;
+}
+</script>
+<script>
+renderNav('/universe');themeInit();let U=null,lastOk=null,initDone=false;const PANELS=['#funnel-panel','#rank-panel','#vg-panel','#uni-panel','#seg-panel'];
+const PHONE_MQ=matchMedia('(max-width:760px)'),MOBILE_PAGE_SIZE=15,MOBILE_DEFAULT_SIZE=15;
+let mobileScope='target',mobilePage=1,mobileSorted=[];
+// tableTools stores positional column indices. Scarcity and Risk were inserted into the middle of this table,
+// so one schema bump replaces legacy positions once, then preserves subsequent user choices.
+function initUniverseColumns(){
+ const schema='scores-v4',schemaKey='mi-cols-uni-schema';
+ const defaultVisible=new Set([0,1,2,4,5,6,7,8,9,10,11]);
+ const defaultHidden=Array.from({length:25},(_,i)=>i).filter(i=>!defaultVisible.has(i));
+ try{if(localStorage.getItem(schemaKey)!==schema){localStorage.setItem('mi-cols-uni',JSON.stringify(defaultHidden));localStorage.setItem(schemaKey,schema);}}catch(e){}
+}
+function hdr(stale){const rows=(U&&U.rows)||[];const w=(U&&U.weights)||{};$('#hdr').innerHTML=runChip(U&&U.run)+asOfChip(U&&U.asof,lastOk,stale)+(U&&U.available?`<span class="chip">${esc(window.t('{count} names',{count:rows.length}))}</span><span class="chip" title="pillar weights of the composite score">${esc(window.t('weights: growth {growth} · momentum {momentum} · value {value}{scarcity}{risk}',{growth:fmt.pct(w.w_growth??w.w_fund_momentum),momentum:fmt.pct(w.w_momentum??w.w_price_momentum),value:fmt.pct(w.w_value),scarcity:w.w_scarcity!=null?window.t(' · scarcity {value}',{value:fmt.pct(w.w_scarcity)}):'',risk:w.w_risk!=null?window.t(' · risk {value}',{value:fmt.pct(w.w_risk)}):''}))}</span>`:'')+`<button type="button" class="chip btn" id="btn-refresh" aria-label="Refresh universe data">↻ Refresh</button>`;$('#btn-refresh').addEventListener('click',load);}
+async function load(){PANELS.forEach(p=>setPanel(p,'loading'));announce('Loading universe');
+ try{U=await fetchJSON('/api/research/universe','universe');lastOk=new Date();}catch(e){if(e.stale)return;PANELS.forEach(p=>setPanel(p,'error',window.t('failed to load: {error}',{error:e.message}),load));hdr(true);return;}
+ $('#banner').innerHTML=statusBanner(U.run);hdr();if(!U.available){$('#cnt').textContent='no pipeline output yet';PANELS.forEach(p=>setPanel(p,'empty','no pipeline output yet'));return;}
+ PANELS.forEach(p=>setPanel(p,'fresh'));const rows=U.rows||[];
+ const keep=(sel,opts,label)=>{const cur=sel.value;sel.innerHTML=`<option value="">${esc(window.t(label))}</option>`+opts.map(s=>`<option value="${esc(s)}" translate="no">${esc(s)}</option>`).join('');sel.value=opts.includes(cur)?cur:'';};
+ keep($('#f-seg'),[...new Set(rows.map(r=>r.segment))].sort(),'all segments');keep($('#f-style'),[...new Set(rows.map(r=>r.style).filter(Boolean))].sort(),'all styles');
+ if(!initDone){initDone=true;applyQS();initUniverseColumns();}filt();tableTools('uni',{label:'universe table'});redraw();segTable();announce(window.t('Universe loaded, {count} names',{count:rows.length}));}
+// W6: filters live in the query string (read once on load, replaceState on every change)
+function applyQS(){const q=qs();const set=(id,v)=>{const el=$('#'+id);if(v==null)return;if(el.type==='checkbox')el.checked=v==='1'||v==='true';else el.value=v;};set('f-seg',q.get('seg'));set('f-style',q.get('style'));set('f-elig',q.get('elig'));set('f-hold',q.get('target'));set('f-q',q.get('q'));}
+function syncQS(){setQS({seg:$('#f-seg').value,style:$('#f-style').value,elig:$('#f-elig').checked,target:$('#f-hold').checked,q:$('#f-q').value.trim()});}
+// redraw-only path (theme change): charts from the cached payload; filters, sort, selections and scroll are untouched
+function redraw(){if(!U||!U.available)return;drawFunnel();drawRank();drawVG();}
+function drawFunnel(){const p=pal();const f=U.funnel||[];plot('p-funnel',[{type:'bar',orientation:'h',x:f.map(r=>r.n),y:f.map(r=>window.t(r.step)),marker:{color:p.pos},text:f.map(r=>r.n),textposition:'outside',textfont:{color:p.ink2,size:12},hovertemplate:'%{y}: %{x}<extra></extra>',cliponaxis:false}],{yaxis:{autorange:'reversed',automargin:true},margin:{l:10,r:40,t:10,b:30},bargap:.35});
+ const first=f[0],last=f[f.length-1];chartNote('p-funnel',first&&last?window.t('{last} of {first} names reach the last step ({step}); {count} screening steps.',{last:last.n,first:first.n,step:window.t(last.step),count:f.length}):'No funnel recorded in this run.',['Step','Names'].map(x=>window.t(x)),f.map(r=>[window.t(r.step),r.n]));}
+function drawRank(){const p=pal();const rows=U.rows||[];const top=[...rows].filter(r=>r.composite!=null).sort((a,b)=>b.composite-a.composite).slice(0,40);const rev=[...top].reverse();
+ plot('p-rank',[{type:'bar',orientation:'h',x:rev.map(r=>r.composite),y:rev.map(r=>r.ticker),marker:{color:rev.map(r=>r.is_holding?p.pos:p.gray)},hovertemplate:'%{y}: %{x:.2f}<extra></extra>'}],{margin:{l:50,r:10,t:10,b:30},yaxis:{tickfont:{size:11}},bargap:.25});
+ const tlist=top.filter(r=>r.is_holding).length;chartNote('p-rank',top.length?window.t('{ticker} ranks first on composite score ({score}); {targets} of the top {count} are in the target list.',{ticker:top[0].ticker,score:fmt.num(top[0].composite),targets:tlist,count:top.length}):'No composite scores.',['Rank','Ticker','Composite','Target list'].map(x=>window.t(x)),top.map((r,i)=>[i+1,r.ticker,fmt.num(r.composite),r.is_holding?window.t('yes'):'']));}
+function median(a){const s=a.filter(v=>v!=null&&!isNaN(v)).sort((x,y)=>x-y);if(!s.length)return null;const m=Math.floor(s.length/2);return s.length%2?s[m]:(s[m-1]+s[m])/2;}
+function drawVG(){const p=pal();const rows=U.rows||[];const vg=rows.filter(r=>r.ev_sales_ntm>0&&r.rev_growth_ntm!=null);const tlist=vg.filter(r=>r.is_holding),rest=vg.filter(r=>!r.is_holding);
+ const mk=(rs,color,name,tx)=>({type:'scatter',mode:tx?'markers+text':'markers',x:rs.map(r=>r.rev_growth_ntm),y:rs.map(r=>r.ev_sales_ntm),text:rs.map(r=>r.ticker),textposition:'top center',textfont:{size:11,color:p.ink2},customdata:rs.map(r=>[r.name,r.segment,r.market_cap]),marker:{size:rs.map(r=>Math.max(6,Math.min(34,Math.sqrt((r.market_cap||1e9)/1e9)*2.2))),color:color,opacity:.85,line:{width:2,color:p.surface}},name:window.t(name),hovertemplate:'%{text} · %{customdata[0]}<br>%{customdata[1]}<br>'+window.t('growth %{x:.0%} · EV/S %{y:.1f}x · cap $%{customdata[2]:.3s}')+'<extra></extra>'});
+ plot('p-vg',[mk(rest,p.gray,'universe',false),mk(tlist,p.pos,'target list',true)],{xaxis:{title:window.t('NTM revenue growth'),tickformat:'.0%'},yaxis:{title:window.t('EV / NTM sales'),type:'log'},showlegend:true}).then(el=>{if(el&&el.on&&!el.dataset.click){el.dataset.click='1';el.on('plotly_click',ev=>{const t=ev.points[0].text;if(t)location.href='/ticker/'+encodeURIComponent(t);});}});
+ chartNote('p-vg',vg.length?window.t('{count} names plotted ({targets} in the target list). Target-list median EV/NTM sales {targetVal} at {targetGrowth} growth vs universe median {universeVal} at {universeGrowth}.',{count:vg.length,targets:tlist.length,targetVal:fmt.x(median(tlist.map(r=>r.ev_sales_ntm))),targetGrowth:fmt.pct(median(tlist.map(r=>r.rev_growth_ntm)),0),universeVal:fmt.x(median(vg.map(r=>r.ev_sales_ntm))),universeGrowth:fmt.pct(median(vg.map(r=>r.rev_growth_ntm)),0)}):'No valuation/growth pairs available.',['Ticker','NTM growth','EV/S NTM','Mkt cap','Target list'].map(x=>window.t(x)),[...tlist,...rest].map(r=>[r.ticker,fmt.pct(r.rev_growth_ntm,0),fmt.x(r.ev_sales_ntm),fmt.big(r.market_cap),r.is_holding?window.t('yes'):'']));}
+function segTable(){const st=U.segments||[];if(!st.length){setPanel('#seg-panel','empty','no segment table in this run');return;}const cols=Object.keys(st[0]);$('#seg thead').innerHTML='<tr>'+cols.map(c=>`<th scope="col" class="${typeof st[0][c]==='number'?'num':''}">${esc(window.t(c.replace(/_/g,' ')))}</th>`).join('')+'</tr>';
+ $('#seg tbody').innerHTML=st.map(r=>'<tr>'+cols.map(c=>`<td class="${typeof r[c]==='number'?'num':''}">${typeof r[c]==='number'?(Math.abs(r[c])<3&&c!=='n'&&!/rank|count|n_/.test(c)?fmt.pct(r[c]):fmt.num(r[c],c==='n'?0:2)):esc(r[c])}</td>`).join('')+'</tr>').join('');}
+const UNI_CARD={ticker:'ticker',name:'name',segment:'segment',metrics:[['Composite',r=>fmt.num(r.composite)],['Growth',r=>fmt.num(r.score_growth)],['Momentum',r=>fmt.num(r.score_momentum)],['Value',r=>fmt.num(r.score_value)],['Quality',r=>fmt.num(r.score_quality)],['Scarcity',r=>pillarCell(r.score_scarcity,r.scarcity_coverage,'scarcity')],['Risk (resilience)',r=>pillarCell(r.score_risk,r.risk_coverage,'risk resilience',r.risk_flags)],['Upside',r=>`<span class="${cls(r.upside)}">${fmt.pct(r.upside,0)}</span>`],['Target list',r=>r.is_holding?window.t('yes'):window.t('no')]]};
+function renderMobileCards(){
+ const bar=$('#mobile-listbar'),host=$('#uni-panel>.cards');if(!bar||!host)return;
+ if(!PHONE_MQ.matches){bar.hidden=true;return;}bar.hidden=false;
+ const target=mobileSorted.filter(r=>r.is_holding);let shown=[],label='',pages=1;
+ if(mobileScope==='target'){
+  const source=target.length?target:mobileSorted;shown=source.slice(0,MOBILE_DEFAULT_SIZE);
+  label=target.length?window.t('Target list · {shown} of {count}',{shown:shown.length,count:mobileSorted.length}):window.t('Top {count} by current sort',{count:shown.length});
+ }else{
+  pages=Math.max(1,Math.ceil(mobileSorted.length/MOBILE_PAGE_SIZE));mobilePage=Math.min(Math.max(1,mobilePage),pages);
+  const start=(mobilePage-1)*MOBILE_PAGE_SIZE;shown=mobileSorted.slice(start,start+MOBILE_PAGE_SIZE);
+  label=window.t('All names · {start}–{end} of {count}',{start:shown.length?start+1:0,end:Math.min(start+shown.length,mobileSorted.length),count:mobileSorted.length});
+ }
+ host.innerHTML=shown.length?shown.map(r=>cardRow(r,UNI_CARD)).join(''):'<div class="empty">No names match the current filters.</div>';
+ $('#m-scope-label').textContent=label;$('#m-scope').textContent=mobileScope==='target'?window.t('Browse all {count}',{count:mobileSorted.length}):'Target / top 15';
+ $('#m-scope').setAttribute('aria-pressed',mobileScope==='all'?'true':'false');
+ const paginate=mobileScope==='all'&&pages>1;$('#m-prev').hidden=!paginate;$('#m-next').hidden=!paginate;$('#m-page').hidden=!paginate;
+ $('#m-prev').disabled=mobilePage<=1;$('#m-next').disabled=mobilePage>=pages;$('#m-page').textContent=window.t('Page {page} of {pages}',{page:mobilePage,pages});
+}
+function filt(){if(!U||!U.available)return;const seg=$('#f-seg').value,sty=$('#f-style').value,el=$('#f-elig').checked,ho=$('#f-hold').checked,q=$('#f-q').value.trim().toLowerCase();const rows=(U.rows||[]).filter(r=>(!seg||r.segment===seg)&&(!sty||r.style===sty)&&(!el||r.eligible)&&(!ho||r.is_holding)&&(!q||r.ticker.toLowerCase().includes(q)||(r.name||'').toLowerCase().includes(q)));$('#cnt').textContent=window.t('{count} shown',{count:rows.length});
+ sortable('uni',rows,r=>`<tr class="row"><td>${r.rank_eligible??''}</td>${rowLink(r.ticker,r.name,r.is_holding?'pos':'')}<td>${esc(r.segment)}</td><td>${esc(r.style||'')}</td><td class="num">${fmt.num(r.composite)}</td><td class="num">${fmt.num(r.score_growth)}</td><td class="num">${fmt.num(r.score_momentum)}</td><td class="num">${fmt.num(r.score_value)}</td><td class="num">${fmt.num(r.score_quality)}</td><td class="num">${pillarCell(r.score_scarcity,r.scarcity_coverage,'scarcity')}</td><td class="num">${pillarCell(r.score_risk,r.risk_coverage,'risk resilience',r.risk_flags)}</td><td class="num ${cls(r.upside)}">${fmt.pct(r.upside,0)}</td><td class="num">${fmt.big(r.market_cap)}</td><td class="num">${fmt.x(r.ev_sales_ntm)}</td><td class="num">${fmt.x(r.pe_ntm,0)}</td><td class="num">${fmt.pct(r.rev_growth_ntm,0)}</td><td class="num">${fmt.pct(r.gross_margin,0)}</td><td class="num">${fmt.pct(r.fcf_margin,0)}</td><td class="num ${cls(r.eps_rev_90d)}">${fmt.pct(r.eps_rev_90d)}</td><td class="num ${cls(r.ret_3m)}">${fmt.pct(r.ret_3m,0)}</td><td class="num ${cls(r.ret_12m)}">${fmt.pct(r.ret_12m,0)}</td><td class="num ${cls(r.event_score_7d)}">${fmt.num(r.event_score_7d)}</td><td>${r.event_level?`<span class="lvl ${r.event_level}">${esc(window.t(r.event_level))}</span>`:''}</td><td>${fmt.date(r.next_earnings)}</td><td class="small">${esc(r.risk_flags||'')}</td></tr>`,'composite',true,{card:r=>cardRow(r,UNI_CARD),emptyText:'No names match the current filters.',onDraw:r=>{mobileSorted=r;renderMobileCards();}});}
+function refilter(){mobilePage=1;syncQS();filt();}
+['f-seg','f-style','f-elig','f-hold'].forEach(id=>$('#'+id).addEventListener('change',refilter));let qt;$('#f-q').addEventListener('input',()=>{clearTimeout(qt);qt=setTimeout(refilter,250);});
+$('#m-scope').addEventListener('click',()=>{mobileScope=mobileScope==='target'?'all':'target';mobilePage=1;renderMobileCards();});
+$('#m-prev').addEventListener('click',()=>{if(mobilePage>1){mobilePage--;renderMobileCards();$('#uni-panel').scrollIntoView({block:'start'});}});
+$('#m-next').addEventListener('click',()=>{mobilePage++;renderMobileCards();$('#uni-panel').scrollIntoView({block:'start'});});
+if(PHONE_MQ.addEventListener)PHONE_MQ.addEventListener('change',renderMobileCards);else PHONE_MQ.addListener(renderMobileCards);
+document.addEventListener('themechange',()=>{redraw();});
+document.addEventListener('languagechange',()=>{if(U){hdr();filt();redraw();segTable();}});
+load().catch(e=>{if(!e.stale)$('#cnt').textContent=window.t('load failed: {error}',{error:e.message});});
+</script></body></html>

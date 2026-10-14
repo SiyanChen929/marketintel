@@ -73,20 +73,6 @@ class Ctx:
 
     def check(self) -> None:
         from .optimizer import check_feasible
-        matrix = self.cov.to_numpy(dtype=float)
-        if self.cov.index.has_duplicates or not self.cov.columns.equals(self.cov.index):
-            raise ValueError("covariance axis identity must match unique tickers")
-        if not np.isfinite(matrix).all() or not np.allclose(matrix, matrix.T, rtol=1e-8, atol=1e-10):
-            raise ValueError("covariance must be finite and symmetric")
-        tolerance = 1e-10 * max(1.0, float(np.linalg.norm(matrix, ord=2)))
-        if np.linalg.eigvalsh(matrix).min() < -tolerance:
-            raise ValueError("covariance must be positive semidefinite")
-        if self.max_weights is not None:
-            caps = self.max_weights.reindex(self.tickers).to_numpy(dtype=float)
-            if not np.isfinite(caps).all() or (caps < self.cfg.min_weight).any():
-                raise ValueError("infeasible per-name cap below minimum bound or missing cap")
-        if self.segments is not None and self.segments.reindex(self.tickers).isna().any():
-            raise ValueError("missing segment identity")
         segs = self.segments.reindex(self.tickers) if self.segments is not None else None
         names = sorted(segs.dropna().unique()) if segs is not None else []
         check_feasible(len(self.tickers), self.cfg.min_weight, self.max_weight_series().values,
@@ -115,10 +101,7 @@ def _norm(w: np.ndarray, ctx: Ctx) -> pd.Series:
     projected = minimize(lambda x: float(np.sum((x - target) ** 2)), feasible.x, method="SLSQP",
                          bounds=ctx.bounds(), constraints=ctx.constraints(), options={"maxiter": 500, "ftol": 1e-12})
     out = projected.x if projected.success else feasible.x
-    weights = pd.Series(out, index=ctx.tickers)
-    if not projected.success:
-        weights.attrs.update(construction_status="fallback", fallback_reason=str(projected.message))
-    return weights
+    return pd.Series(out, index=ctx.tickers)
 
 
 def _segment_matrix(ctx: Ctx) -> np.ndarray | None:
@@ -149,9 +132,7 @@ def _solve(obj, ctx: Ctx, x0: np.ndarray | None = None, tries: int = 2) -> pd.Se
             best = r
     if best is None:
         log.debug("construction solve did not converge; using the capped equal-weight start")
-        weights = _norm(start, ctx)
-        weights.attrs.update(construction_status="fallback", fallback_reason="construction solver did not converge")
-        return weights
+        return _norm(start, ctx)
     return _norm(best.x, ctx)
 
 

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.siyanchen.marketintel.tunnel</string>
+  <key>ProgramArguments</key><array>
+    <string>/opt/homebrew/bin/cloudflared</string><string>tunnel</string><string>--no-autoupdate</string><string>--protocol</string><string>http2</string>
+    <string>--metrics</string><string>127.0.0.1:20242</string><string>--url</string><string>http://127.0.0.1:8787</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>30</integer>
+  <key>StandardOutPath</key><string>__PROJECT__/outputs/logs/tunnel.out</string>
+  <key>StandardErrorPath</key><string>__PROJECT__/outputs/logs/tunnel.out</string>
+</dict></plist>

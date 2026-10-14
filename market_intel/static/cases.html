@@ -1,0 +1,107 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Market Intel · Cases</title>
+<link rel="stylesheet" href="/static/base.css"><script src="/static/base.js"></script>
+<style>
+.notes{margin:0;padding:0;list-style:none;display:grid;gap:6px}.notes li{background:var(--wash);border-radius:8px;padding:6px 10px;font-size:12.5px;white-space:pre-wrap}.notes li .m{font-size:12px;color:var(--muted);white-space:normal}
+.evl{margin:0;padding:0;list-style:none;display:grid;gap:4px}.evl li{font-size:12.5px;border-bottom:1px solid var(--grid);padding:5px 0}.evl li:last-child{border-bottom:0}.evl li>a{text-decoration:none;font-weight:600}.evl li>a:hover{text-decoration:underline}.evl .m{font-size:12px;color:var(--muted)}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}.fields label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;min-width:0}.fields label>*{font-size:13px;text-transform:none;letter-spacing:0;color:var(--ink);width:100%}.fields label.w{grid-column:1/-1}@media (max-width:576px){.fields{grid-template-columns:1fr}}
+td.title{white-space:normal;min-width:220px;max-width:460px}textarea{width:100%;min-height:56px;resize:vertical}
+</style></head>
+<body>
+<header class="top"><h1>Market Intel</h1><span class="sub">review cases · analyst workflow</span><nav class="tabs" id="nav"></nav><div class="chips hdr" id="hdr"></div><button type="button" class="chip btn" id="btn-theme" aria-pressed="false" aria-label="Switch theme">◐</button></header>
+<main class="g2">
+ <div id="banner" style="grid-column:1/-1"></div>
+ <section class="panel wide" id="sum-panel"><div class="head"><h2>Case load</h2><span class="small">one case per story × target-list name · SLA: critical 4h, warning 24h · decisions are analyst review / monitor / refresh model inputs / no change · no trade instructions</span></div><div class="kpis" id="kpis"></div></section>
+ <section class="panel wide" id="list-panel">
+  <div class="head"><h2>Cases</h2><div class="chips"><button type="button" class="chip btn" id="btn-new" aria-expanded="false" aria-controls="new-form">+ New case</button><button type="button" class="chip btn" id="btn-refresh" aria-label="Refresh cases">↻ Refresh</button></div></div>
+  <form class="form" id="new-form" hidden aria-label="New case" style="margin-bottom:10px;padding:10px;border:1px solid var(--border);border-radius:8px">
+   <label>Ticker <input type="text" id="n-ticker" size="8" required placeholder="MU" autocomplete="off"></label>
+   <label>Level <select id="n-level"><option value="warning">warning</option><option value="critical">critical</option><option value="info">info</option></select></label>
+   <label style="flex:1 1 280px">Title <input type="text" id="n-title" required placeholder="what needs analyst review"></label>
+   <label>Owner <input type="text" id="n-owner" size="10" placeholder="optional"></label>
+   <button type="submit" class="primary" id="n-submit">Create</button><span class="small" id="n-msg" role="status" aria-live="polite"></span>
+  </form>
+  <div class="form" role="group" aria-label="Case filters" style="margin-bottom:10px">
+   <label>Status <select id="f-status"><option value="active">active (open + acknowledged + in review)</option><option value="open">open</option><option value="acknowledged">acknowledged</option><option value="in_review">in_review</option><option value="decided">decided</option><option value="closed">closed</option><option value="all">all</option></select></label>
+   <label>Ticker <input type="text" id="f-ticker" size="8" placeholder="any" autocomplete="off"></label>
+   <label>Your name <input type="text" id="f-by" size="12" placeholder="analyst" title="recorded as the author of acknowledgements, notes and edits"></label>
+   <span class="small" id="list-note"></span>
+  </div>
+  <div class="tblwrap"><table id="cases"><caption class="sr-only">Review cases: id, created, ticker with target weight, level, title, owner, due, SLA hours, status, acknowledgement</caption><thead><tr><th data-k="id" class="num">#</th><th data-k="created">Created</th><th data-k="ticker">Ticker</th><th data-k="level">Level</th><th data-k="title">Title</th><th data-k="owner">Owner</th><th data-k="due">Due</th><th data-k="sla_hours" class="num">SLA h</th><th data-k="status">Status</th><th data-k="ack_at">Ack</th></tr></thead><tbody></tbody></table></div>
+ </section>
+</main>
+<dialog class="drawer" id="drawer" aria-labelledby="d-title">
+ <div class="dh"><div style="min-width:0"><h2 id="d-title">Case</h2><div class="small" id="d-sub" style="white-space:normal"></div></div><div class="chips" style="flex:none"><button type="button" class="chip btn" id="d-ack">Acknowledge</button><button type="button" class="chip btn" id="d-close" aria-label="Close the case drawer">✕</button></div></div>
+ <div class="db">
+  <div><h3>Case chain</h3><div class="chain" id="d-chain" aria-label="Case chain"></div></div>
+  <div><h3>Evidence</h3><ul class="evl" id="d-evidence"></ul></div>
+  <div><h3>Workflow</h3><div class="fields" id="d-fields">
+   <label>Owner <input type="text" id="d-owner" autocomplete="off"></label>
+   <label>Due <input type="datetime-local" id="d-due"></label>
+   <label>Status <select id="d-status"><option value="open">open</option><option value="acknowledged">acknowledged</option><option value="in_review">in_review</option><option value="decided">decided</option><option value="closed">closed</option></select></label>
+   <label>Decision <input type="text" id="d-decision" list="decisions" placeholder="analyst review / monitor / refresh model inputs / no change"><datalist id="decisions"><option value="analyst review"></option><option value="monitor"></option><option value="refresh model inputs"></option><option value="no change"></option></datalist></label>
+   <label class="w">No-trade reason <input type="text" id="d-notrade" placeholder="why no change follows (evidence within kill-criteria tolerance, …)"></label>
+   <label>Execution reference <input type="text" id="d-exec" placeholder="ticket / memo reference"></label>
+   <label>Sign-off by <input type="text" id="d-signoff" placeholder="PM initials"></label>
+  </div><div class="chips" style="margin-top:8px"><button type="button" class="primary" id="d-save">Save</button><span class="small" id="d-msg" role="status" aria-live="polite"></span></div></div>
+  <div><h3>Notes</h3><ul class="notes" id="d-notes"></ul><div style="margin-top:8px"><textarea id="d-note" placeholder="add a note…" aria-label="New note"></textarea><div class="chips" style="margin-top:6px"><button type="button" class="chip btn" id="d-addnote">Add note</button></div></div></div>
+ </div>
+</dialog>
+<script>
+renderNav('/cases');themeInit();
+let L=null,W={},cur=null,lastOk=null;
+const dt=s=>{if(!s)return '';const d=new Date(s);return isNaN(d)?String(s).slice(0,16):d.toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});};
+const stTxt=s=>window.t(String(s||'').replace('_',' '));
+function stored(){try{return localStorage.getItem('mi-analyst')||'';}catch(e){return '';}}
+function analyst(){return $('#f-by').value.trim()||stored()||'analyst';}
+// URL state: ?status= ?ticker= ?id= (id opens the drawer)
+(function(){const q=qs();const st=q.get('status');if(st&&$$('#f-status option').some(o=>o.value===st))$('#f-status').value=st;if(q.get('ticker'))$('#f-ticker').value=q.get('ticker').toUpperCase();$('#f-by').value=stored();})();
+function hdr(stale){const s=(L&&L.summary)||{};$('#hdr').innerHTML=runChip(L&&L.run)+(L?`<span class="chip">${esc(window.t('{count} open',{count:s.open||0}))}</span><span class="chip${s.overdue?' bad':''}">${esc(window.t('{count} overdue',{count:s.overdue||0}))}</span><span class="chip${s.unacknowledged?' warnc':''}">${esc(window.t('{count} unacknowledged',{count:s.unacknowledged||0}))}</span>`:'')+asOfChip(L&&L.run&&L.run.asof_session,lastOk,stale);}
+function kpis(){const s=(L&&L.summary)||{};const bs=s.by_status||{};$('#kpis').innerHTML=Kpi('Open',s.open||0,'open + acknowledged + in review')+Kpi('Overdue',`<span class="${s.overdue?'overdue':''}">${s.overdue||0}</span>`,'past the SLA due time')+Kpi('Unacknowledged',s.unacknowledged||0,'status open')+Kpi('Decided',bs.decided||0,'awaiting close')+Kpi('Closed',bs.closed||0,'all time');}
+async function load(){const st=$('#f-status').value,tk=$('#f-ticker').value.trim().toUpperCase();setQS({status:st==='active'?'':st,ticker:tk});setPanel('#list-panel','loading');
+ const p=new URLSearchParams({status:st,limit:200});if(tk)p.set('ticker',tk);
+ try{L=await fetchJSON('/api/cases?'+p,'cases');lastOk=new Date();}catch(e){if(e.stale)return;setPanel('#list-panel','error',window.t('failed to load: {error}',{error:e.message}),load);hdr(true);return;}
+ $('#banner').innerHTML=statusBanner(L.run);hdr();kpis();draw();}
+// target weights for the ticker column and the chain summary (canonical run, executable + model)
+async function loadWeights(){try{const d=await fetchJSON('/api/board','board');W={};(d.rows||[]).forEach(r=>{if(r.is_holding)W[r.ticker]=r;});if(L)draw();if(cur)renderChain(cur);}catch(e){}}
+const CARD={ticker:'ticker',name:'title',href:c=>'/ticker/'+encodeURIComponent(c.ticker),metrics:[['Case',c=>'#'+c.id],['Level',c=>Badge(c.level)],['Status',c=>`<span class="cst ${esc(c.status)}" data-i18n-label>${esc(stTxt(c.status))}</span>`],['Owner',c=>esc(c.owner||'–')],['Due',c=>`<span class="${c.overdue?'overdue':''}">${esc(dt(c.due))}${c.overdue?' · overdue':''}</span>`],['Target w',c=>W[c.ticker]?fmt.pct(W[c.ticker].weight):'not on target list'],['',c=>`<button type="button" class="chip btn sm" data-open="${c.id}" aria-label="${esc(window.t('Open case {id}',{id:c.id}))}">open case</button>`]]};
+function draw(){const rows=(L&&L.cases)||[];const st=$('#f-status').value,tk=$('#f-ticker').value.trim().toUpperCase();$('#list-note').textContent=window.t('{count} cases',{count:rows.length});
+ if(rows.length)setPanel('#list-panel','fresh');else setPanel('#list-panel','empty',window.t('no {status}cases{ticker}',{status:st==='all'?'':stTxt(st)+' ',ticker:tk?window.t(' for {ticker}',{ticker:tk}):''}));
+ sortable('cases',rows,c=>{const w=W[c.ticker];return `<tr class="row${c.overdue?' od':''}" data-id="${c.id}" tabindex="0" aria-label="${esc(window.t('Open case {id}, {ticker}',{id:c.id,ticker:c.ticker}))}"><td class="num">${c.id}</td><td title="${esc(c.created||'')}">${esc(dt(c.created))}</td><td class="t"><a href="/ticker/${encodeURIComponent(c.ticker)}">${esc(c.ticker)}</a>${w?`<small title="${esc(window.t('executable target weight (model {model}) · no live position ledger',{model:fmt.pct(w.model_weight)}))}"> ${esc(window.t('target {weight}',{weight:fmt.pct(w.weight)}))}</small>`:''}</td><td>${Badge(c.level)}</td><td class="title" translate="no">${esc(c.title||'')}</td><td>${esc(c.owner||'')}</td><td class="${c.overdue?'overdue':''}" title="${esc(c.due||'')}">${esc(dt(c.due))}${c.overdue?' · '+window.t('overdue'):c.is_open&&c.hours_to_due!=null?' · '+window.t('{hours}h left',{hours:fmt.num(c.hours_to_due,1)}):''}</td><td class="num">${fmt.num(c.sla_hours,0)}</td><td><span class="cst ${esc(c.status)}" data-i18n-label>${esc(stTxt(c.status))}</span></td><td title="${esc(c.ack_at||'')}">${c.ack_at?'✓ '+esc(c.ack_by||''):'–'}</td></tr>`;},'created',true,{card:c=>cardRow(c,CARD),emptyText:'No cases match the current filters.'});
+ tableTools('cases',{label:'cases'});}
+// ---------- drawer
+const drawer=$('#drawer');
+async function openCase(id){let d;try{d=await fetchJSON('/api/cases/'+encodeURIComponent(id),'case');}catch(e){if(!e.stale)Toast.bad(window.t('Could not load case #{id}: {error}',{id,error:e.message}));return;}
+ cur=d;setQS({id:d.case.id});renderDrawer(d);if(!drawer.open)drawer.showModal();}
+function toLocal(iso){if(!iso)return '';const d=new Date(iso);if(isNaN(d))return '';const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;}
+function renderChain(d){const c=d.case;const w=W[c.ticker];const step=(k,v,href,on)=>`<${href?'a':'span'} class="step${on?' on':''}"${href?` href="${href}"`:''}><b>${esc(k)}</b><span>${v}</span></${href?'a':'span'}>`;const arr='<span class="arr" aria-hidden="true">→</span>';
+ $('#d-chain').innerHTML=step('Event',esc(window.t('{count} evidence · {level}',{count:(d.evidence||[]).length,level:window.t(c.level||'')})),'/?ticker='+encodeURIComponent(c.ticker),true)+arr+step('Model rerun','refresh model inputs · Research','/research',!!(c.decision&&/refresh/i.test(c.decision)))+arr+step('Target weight',w?esc(window.t('{weight} · model {model}',{weight:fmt.pct(w.weight),model:fmt.pct(w.model_weight)})):'not on the target list','/portfolio',!!w)+arr+step('Risk','workbench','/risk',false)+arr+step('Decision',(c.decision?'<span translate="no">'+esc(c.decision)+'</span>':esc(window.t('pending')))+(c.signoff_by?esc(window.t(' · signed off by {name}',{name:c.signoff_by})):''),null,!!c.decision);}
+function renderDrawer(d){const c=d.case;$('#d-title').textContent=window.t('Case #{id} · {ticker}',{id:c.id,ticker:c.ticker});
+ $('#d-sub').innerHTML=`${Badge(c.level)} <span class="cst ${esc(c.status)}" data-i18n-label>${esc(stTxt(c.status))}</span> · ${esc(window.t('created {date}',{date:dt(c.created)}))} · SLA ${fmt.num(c.sla_hours,0)}h · ${c.overdue?'<b class="overdue">overdue</b>':c.is_open&&c.hours_to_due!=null?esc(window.t('{hours}h to due',{hours:fmt.num(c.hours_to_due,1)})):'not open'} · <span translate="no">${esc(c.title||'')}</span>`;
+ renderChain(d);
+ $('#d-evidence').innerHTML=(d.evidence||[]).length?d.evidence.map(e=>`<li>${Badge(e.alert_level)} <a translate="no" href="${esc(e.url||'#')}" target="_blank" rel="noopener">${esc(e.one_liner||e.title||e.id)}</a><div class="m">${esc(e.event_type||'')} · ${esc(e.source_name||'')} · ${esc(dt(e.published))} · ${esc(window.t(e.read?'read':'unread'))} · <a href="/?ticker=${encodeURIComponent(c.ticker)}">open in feed</a></div></li>`).join(''):'<li class="small">No evidence events attached (manual case).</li>';
+ $('#d-owner').value=c.owner||'';$('#d-due').value=toLocal(c.due);$('#d-status').value=c.status||'open';$('#d-decision').value=c.decision||'';$('#d-notrade').value=c.no_trade_reason||'';$('#d-exec').value=c.execution_ref||'';$('#d-signoff').value=c.signoff_by||'';
+ $('#d-ack').hidden=!!c.ack_at;busy($('#d-ack'),false);
+ $('#d-notes').innerHTML=(c.notes||[]).length?c.notes.slice().reverse().map(n=>`<li translate="no"><div class="m">${esc(dt(n.at))} · ${esc(n.by||'')}</div>${esc(n.text||'')}</li>`).join(''):'<li class="small">No notes yet.</li>';$('#d-msg').textContent='';}
+$('#d-save').addEventListener('click',async()=>{if(!cur)return;const c=cur.case;const body={by:analyst()};const set=(k,v,old)=>{if((v||'')!==(old||''))body[k]=v;};
+ set('owner',$('#d-owner').value.trim(),c.owner);set('status',$('#d-status').value,c.status);set('decision',$('#d-decision').value.trim(),c.decision);set('no_trade_reason',$('#d-notrade').value.trim(),c.no_trade_reason);set('execution_ref',$('#d-exec').value.trim(),c.execution_ref);set('signoff_by',$('#d-signoff').value.trim(),c.signoff_by);
+ const due=$('#d-due').value;if(due&&due!==toLocal(c.due))body.due=new Date(due).toISOString();
+ if(Object.keys(body).length===1){$('#d-msg').textContent='nothing changed';return;}const b=$('#d-save');busy(b,true,'Saving…');
+ try{await postJSON('/api/cases/'+c.id,body);Toast.ok(window.t('Case #{id} saved',{id:c.id}));await openCase(c.id);await load();}catch(e){$('#d-msg').textContent=window.t('save failed: {error}',{error:e.message});Toast.bad('Save failed');}busy(b,false);});
+$('#d-addnote').addEventListener('click',async()=>{if(!cur)return;const t=$('#d-note').value.trim();if(!t){$('#d-note').focus();return;}const b=$('#d-addnote');busy(b,true,'Adding…');
+ try{await postJSON('/api/cases/'+cur.case.id,{note:t,by:analyst()});$('#d-note').value='';Toast.ok('Note added');await openCase(cur.case.id);}catch(e){Toast.bad(window.t('Note failed: {error}',{error:e.message}));}busy(b,false);});
+$('#d-ack').addEventListener('click',async()=>{if(!cur)return;const b=$('#d-ack');busy(b,true,'…');try{await postJSON('/api/cases/'+cur.case.id+'/ack',{by:analyst()});Toast.ok(window.t('Case #{id} acknowledged',{id:cur.case.id}));await openCase(cur.case.id);await load();}catch(e){Toast.bad(window.t('Acknowledge failed: {error}',{error:e.message}));busy(b,false);}});
+$('#d-close').addEventListener('click',()=>drawer.close());drawer.addEventListener('close',()=>{cur=null;setQS({id:''});});drawer.addEventListener('click',e=>{if(e.target===drawer)drawer.close();});
+$('#cases').addEventListener('click',e=>{const tr=e.target.closest('tr.row');if(!tr||e.target.closest('a,button'))return;openCase(+tr.dataset.id);});
+$('#cases').addEventListener('keydown',e=>{const tr=e.target.closest('tr.row');if(!tr||e.target!==tr||(e.key!=='Enter'&&e.key!==' '))return;e.preventDefault();openCase(+tr.dataset.id);});
+$('#list-panel').addEventListener('click',e=>{const b=e.target.closest('[data-open]');if(b)openCase(+b.dataset.open);});
+// ---------- new case
+$('#btn-new').addEventListener('click',()=>{const f=$('#new-form');f.hidden=!f.hidden;$('#btn-new').setAttribute('aria-expanded',f.hidden?'false':'true');if(!f.hidden){if(!$('#n-ticker').value)$('#n-ticker').value=$('#f-ticker').value.trim().toUpperCase();if(!$('#n-owner').value&&analyst()!=='analyst')$('#n-owner').value=analyst();$('#n-ticker').focus();}});
+$('#new-form').addEventListener('submit',async e=>{e.preventDefault();const body={ticker:$('#n-ticker').value.trim().toUpperCase(),title:$('#n-title').value.trim(),level:$('#n-level').value,by:analyst()};const o=$('#n-owner').value.trim();if(o)body.owner=o;
+ if(!body.ticker||!body.title){$('#n-msg').textContent='ticker and title are required';return;}const b=$('#n-submit');busy(b,true,'Creating…');
+ try{const r=await postJSON('/api/cases',body);Toast.ok(window.t('Case #{id} created',{id:r.case.id}));$('#new-form').hidden=true;$('#btn-new').setAttribute('aria-expanded','false');$('#n-title').value='';$('#n-msg').textContent='';await load();openCase(r.case.id);}catch(err){$('#n-msg').textContent=window.t('create failed: {error}',{error:err.message});}busy(b,false);});
+// ---------- filters, boot, refresh (2 min, paused while hidden)
+$('#f-status').addEventListener('change',load);let ft;$('#f-ticker').addEventListener('input',()=>{clearTimeout(ft);ft=setTimeout(load,300);});$('#f-by').addEventListener('change',()=>{try{localStorage.setItem('mi-analyst',$('#f-by').value.trim());}catch(e){}});$('#btn-refresh').addEventListener('click',load);
+load().then(()=>{const id=qs().get('id');if(id&&/^\d+$/.test(id))openCase(+id);});loadWeights();visiblePoll(load,120000);
+// Keep all in-progress edits intact while updating cached labels and workflow status.
+document.addEventListener('languagechange',()=>{if(L){hdr();kpis();draw();}if(cur)renderChain(cur);});
+</script></body></html>

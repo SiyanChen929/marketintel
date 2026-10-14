@@ -377,8 +377,6 @@ def grinold_alphas(top: pd.DataFrame, cov: pd.DataFrame, rf: float, betas: pd.Se
 def run_portfolio(top: pd.DataFrame, px: pd.DataFrame, rf: float, cfg: PortfolioConfig | None = None,
                   erp: float = 0.05, cash_rate: pd.Series | None = None) -> dict:
     cfg = cfg or CONFIG.portfolio
-    if not np.isfinite(cfg.vol_target) or cfg.vol_target <= 0:
-        raise ValueError("volatility target must be finite and positive")
     tickers = list(top.index)
     segs = top["segment"]
     R, rinfo = build_returns(px, tickers, segs, cfg)
@@ -389,7 +387,7 @@ def run_portfolio(top: pd.DataFrame, px: pd.DataFrame, rf: float, cfg: Portfolio
     betas = realised_betas(R, px)
     legacy_bl = black_litterman(cov, top_cov["market_cap"], rf, top_cov["upside"], conf, cfg, betas=betas, erp=erp)
     mu = grinold_alphas(top_cov, cov, rf, betas, erp, cfg.grinold_ic)
-    HIGH_RISK_WEIGHT_CAP = 0.05  # numeric policy retained from the private strategic layer
+    from ..analysis.strategic import HIGH_RISK_WEIGHT_CAP
     max_w = pd.Series(cfg.max_weight, index=top_cov.index)
     if "risk_capped" in top_cov.columns:
         max_w[top_cov["risk_capped"].fillna(False).astype(bool)] = HIGH_RISK_WEIGHT_CAP

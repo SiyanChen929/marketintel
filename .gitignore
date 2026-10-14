@@ -1,13 +1,38 @@
-.venv/
+# Python
 __pycache__/
-.pytest_cache/
+*.py[cod]
 *.egg-info/
-.env
-*API*Key*
-*api_key*
+.pytest_cache/
+.venv/
+venv/
+build/
+dist/
+
+# Local data, caches and generated products (fetched or produced at run time; never versioned)
 data_cache/
 outputs/
+outputs_baseline/
 output/
-runs/
-*.sqlite*
+tmp/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.parquet
+*.csv.gz
+*.npy
+*.zip
+
+# Credentials
+.env
+*API Key*.txt
+*api_key*
+.anthropic_api_key
+.openai_api_key
+access_token
+settings.local.json
+
+# Editors / OS
 .DS_Store
+.idea/
+.vscode/
+node_modules/

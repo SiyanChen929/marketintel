@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.siyanchen.marketintel</string>
+  <!-- python is launched directly: a zsh wrapper spawned by launchd cannot open scripts inside the privacy-protected Desktop folder -->
+  <key>ProgramArguments</key><array><string>/opt/anaconda3/bin/python3</string><string>-m</string><string>market_intel</string><string>serve</string></array>
+  <key>WorkingDirectory</key><string>__PROJECT__</string>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>30</integer>
+  <key>StandardOutPath</key><string>__PROJECT__/outputs/logs/market_intel.out</string>
+  <key>StandardErrorPath</key><string>__PROJECT__/outputs/logs/market_intel.out</string>
+  <key>EnvironmentVariables</key><dict><key>PATH</key><string>/opt/anaconda3/bin:/usr/local/bin:/usr/bin:/bin</string><key>PYTHONUNBUFFERED</key><string>1</string></dict>
+</dict></plist>

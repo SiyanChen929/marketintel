@@ -1,0 +1,10 @@
+{
+  "horizon": "12m",
+  "benchmark": "SOXX",
+  "base": {"pt": null, "prob": 0.5, "thesis": "", "kill_criteria": ""},
+  "bull": {"pt": null, "prob": 0.25, "thesis": ""},
+  "bear": {"pt": null, "prob": 0.25, "thesis": ""},
+  "watch_kpis": [],
+  "author": "",
+  "asof": ""
+}

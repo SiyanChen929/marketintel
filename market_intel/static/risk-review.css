@@ -1,0 +1,56 @@
+/* Risk review: overview, selected analytical scope, and canonical-book diagnostics. */
+body.risk-page #review-panel{border-top:3px solid var(--ink);padding:16px}
+.review-eyebrow{font-size:10px;letter-spacing:.13em;color:var(--muted);margin-bottom:4px}
+body.risk-page #review-title{font-size:23px;letter-spacing:-.03em;margin:0}
+.review-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0}
+.review-kpis .kpi{border:0;border-radius:0;border-left:2px solid var(--grid);padding:2px 12px}
+.review-kpis .v{font-size:20px;margin:3px 0}.review-kpis .d{line-height:1.5}
+.review-findings{padding:0;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.review-findings li{border:1px solid var(--border);border-radius:8px;padding:10px 12px;min-width:0;font-size:12px}
+.review-findings strong{display:block;color:var(--ink);margin:5px 0}.review-findings p{margin:0;color:var(--ink2);line-height:1.5;overflow-wrap:anywhere}
+.review-findings a{display:inline-block;margin-top:6px}.review-findings .block{color:var(--crit)}
+.review-lineage{display:grid;grid-template-columns:150px minmax(0,1fr);font-size:12px;gap:5px 12px;line-height:1.5}
+.review-lineage dt{color:var(--muted)}.review-lineage dd{margin:0;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.review-controls{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:12px 0}
+.review-controls label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.review-controls select{min-width:210px;color:var(--ink)}
+.selection-scope{border-left:3px solid var(--ink);background:var(--wash);padding:10px 12px;margin-bottom:10px;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.canonical-divider{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 12px;border-top:1px solid var(--axis);padding-top:16px;color:var(--muted);font-size:12px}
+.canonical-divider b{color:var(--ink);font-size:15px}.canonical-divider>span:last-child{flex-basis:100%}
+body.risk-page #pc-panel .rmx-core-table-wrap{max-height:330px}
+body.risk-page #pc-panel .rmx-pick{min-height:32px;text-align:left;text-underline-offset:3px}
+body.risk-page #pc-panel tr[aria-selected="true"]>*{background:var(--wash);box-shadow:inset 0 1px var(--axis),inset 0 -1px var(--axis)}
+body.risk-page #pc-panel .rmx-card[aria-selected="true"]{border:2px solid var(--ink)}
+body.risk-page #pc-panel .rmx-core-actions{margin:4px 0 6px}
+body.risk-page #pc-panel .badge{white-space:normal;display:inline-block}
+body.risk-page .review-warning{color:var(--crit);font-weight:600}
+body.risk-page .risk-scope{font-size:12px}
+body.risk-page #var-h10 td{white-space:normal;min-width:80px}
+body.risk-page #var-h10 th:last-child{min-width:200px}
+body.risk-page section,body.risk-page #canonical-scope{scroll-margin-top:110px}
+body.risk-page[data-review-state="loading"] main>:not(#review-panel),
+body.risk-page[data-review-state="error"] main>:not(#review-panel),
+body.risk-page[data-review-state="mismatch"] main>:not(#review-panel){display:none}
+@media(max-width:760px){
+ body.risk-page .review-kpis{grid-template-columns:1fr 1fr;gap:14px 6px}
+ body.risk-page .review-findings{grid-template-columns:1fr}
+ body.risk-page .review-lineage{grid-template-columns:1fr;gap:2px}.review-lineage dd{margin-bottom:7px}
+ body.risk-page .review-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+ body.risk-page .review-controls label:first-child{grid-column:1/-1}
+ body.risk-page .review-controls select{min-width:0;width:100%}
+ body.risk-page select,body.risk-page input{font-size:16px;min-height:44px}
+ body.risk-page .chip.btn,body.risk-page summary,body.risk-page #pc-panel .rmx-pick{min-height:44px}
+ body.risk-page summary{display:flex;align-items:center}
+ body.risk-page .review-controls a{align-self:end;display:flex;align-items:center;justify-content:center}
+ body.risk-page #review-panel{padding:12px}.review-kpis .v{font-size:18px}
+ body.risk-page .review-findings a{min-height:44px;display:flex;align-items:center}
+ body.risk-page .review-kpis .kpi{padding:2px 8px}
+ body.risk-page #pc-panel .rmx-ctl{grid-template-columns:minmax(0,1fr)}
+ body.risk-page #pc-panel .rmx-card dl{font-size:13px}
+ body.risk-page .risk-scope details:not([open]){flex:0 0 auto}
+ body.risk-page header.top{position:static}
+ body.risk-page header.top .hdr{display:grid;grid-template-columns:minmax(0,1fr) auto;overflow:visible;gap:4px 8px}
+ body.risk-page header.top .hdr>.run,body.risk-page header.top .hdr>.chip:not(.asof):not(.btn){display:none}
+ body.risk-page header.top .hdr>.asof{white-space:normal;overflow:visible;line-height:1.5}
+ body.risk-page section,body.risk-page #canonical-scope{scroll-margin-top:12px}
+}

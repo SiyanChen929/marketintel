@@ -1,0 +1,31 @@
+# Feed catalogue. type: news | press | macro | policy. weight = source credibility (0-1). every = poll cadence in cycles.
+feeds:
+  - {id: cnbc_top,        name: CNBC Top News,        url: "https://www.cnbc.com/id/100003114/device/rss/rss.html", type: news, weight: 0.8}
+  - {id: cnbc_tech,       name: CNBC Technology,      url: "https://www.cnbc.com/id/19854910/device/rss/rss.html", type: news, weight: 0.8}
+  - {id: cnbc_investing,  name: CNBC Investing,       url: "https://www.cnbc.com/id/20910258/device/rss/rss.html", type: news, weight: 0.75}
+  - {id: cnbc_earnings,   name: CNBC Earnings,        url: "https://www.cnbc.com/id/15839135/device/rss/rss.html", type: news, weight: 0.8}
+  - {id: mw_top,          name: MarketWatch Top Stories,  url: "https://feeds.content.dowjones.io/public/rss/mw_topstories", type: news, weight: 0.75}
+  - {id: wsj_markets,     name: WSJ Markets,          url: "https://feeds.content.dowjones.io/public/rss/RSSMarketsMain", type: news, weight: 0.9}
+  - {id: yahoo_index,     name: Yahoo Finance,        url: "https://finance.yahoo.com/news/rssindex", type: news, weight: 0.6, publisher_from_url: true}
+  - {id: investing_news,  name: Investing.com,        url: "https://www.investing.com/rss/news.rss", type: news, weight: 0.55}
+  - {id: sa_currents,     name: Seeking Alpha Market Currents, url: "https://seekingalpha.com/market_currents.xml", type: news, weight: 0.6}
+  - {id: nyt_business,    name: New York Times Business, url: "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml", type: news, weight: 0.75, every: 2}
+  - {id: bbc_business,    name: BBC Business,         url: "https://feeds.bbci.co.uk/news/business/rss.xml", type: news, weight: 0.65, every: 2}
+  - {id: techcrunch_ai,   name: TechCrunch AI,        url: "https://techcrunch.com/category/artificial-intelligence/feed/", type: news, weight: 0.6, every: 2, tags: [ai]}
+  - {id: verge,           name: The Verge,            url: "https://www.theverge.com/rss/index.xml", type: news, weight: 0.5, every: 3, tags: [tech]}
+  - {id: semianalysis,    name: SemiAnalysis,         url: "https://newsletter.semianalysis.com/feed", type: news, weight: 0.9, every: 3, tags: [semis]}
+  - {id: digitimes,       name: DigiTimes,            url: "https://www.digitimes.com/rss/daily.xml", type: news, weight: 0.85, tags: [semis, supply_chain]}
+  - {id: gnw_earnings,    name: GlobeNewswire Earnings, url: "https://www.globenewswire.com/RssFeed/subjectcode/16-Earnings%20Releases%20and%20Operating%20Results/feedTitle/GlobeNewswire%20-%20Earnings%20Releases%20And%20Operating%20Results", type: press, weight: 0.85}
+  - {id: prn_financial,   name: PR Newswire Financial, url: "https://www.prnewswire.com/rss/financial-services-latest-news/financial-services-latest-news-list.rss", type: press, weight: 0.6, every: 2}
+  - {id: fed_press,       name: Federal Reserve,      url: "https://www.federalreserve.gov/feeds/press_all.xml", type: macro, weight: 1.0}
+  - {id: bls_latest,      name: BLS Latest Numbers,   url: "https://www.bls.gov/feed/bls_latest.rss", type: macro, weight: 0.9, every: 3}
+  - {id: whitehouse,      name: White House Actions,  url: "https://www.whitehouse.gov/presidential-actions/feed/", type: policy, weight: 0.9, every: 2}
+
+# Google News queries (each is one RSS request). {holdings} expands to the current top-15 names in groups of five.
+google_news:
+  - {id: holdings, query: "{holdings}", every: 2}
+  - {id: semis, query: "semiconductor stocks OR chip stocks OR Nvidia OR TSMC OR Micron", every: 2}
+  - {id: ai_infra, query: "AI data center OR hyperscaler capex OR GPU demand OR CoWoS OR HBM", every: 2}
+  - {id: policy, query: "chip export controls OR semiconductor tariffs OR Section 232 semiconductors", every: 3}
+  - {id: power, query: "data center power nuclear PPA OR GE Vernova OR Vistra OR Constellation Energy", every: 4}
+  - {id: optics, query: "optical transceiver 800G OR Coherent Lumentum Credo Astera Labs", every: 4}

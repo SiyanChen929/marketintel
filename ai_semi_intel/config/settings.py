@@ -28,11 +28,15 @@ def load_fred_key() -> str:
     key = os.environ.get("FRED_API_KEY", "").strip()
     if key:
         return key
-    raise RuntimeError("Set FRED_API_KEY in your environment.")
+    for name in ("FRED API Key.txt", "fred_api_key.txt"):
+        p = PROJECT_ROOT / name
+        if p.exists():
+            return p.read_text().strip()
+    raise RuntimeError("FRED API key not found. Set FRED_API_KEY or create 'FRED API Key.txt'.")
 
 
 # SEC requires a descriptive User-Agent with contact info.
-SEC_USER_AGENT = os.environ.get("SEC_USER_AGENT", "Student Research siyan_chen@ucsb.edu")
+SEC_USER_AGENT = os.environ.get("SEC_USER_AGENT", "MarketIntel Research siyan_chen@ucsb.edu")
 
 
 @dataclass

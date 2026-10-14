@@ -1,0 +1,295 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Market Intel · Constructions</title>
+<link rel="stylesheet" href="/static/base.css"><script src="/static/plotly.min.js"></script><script src="/static/base.js"></script>
+<style>.lead{font-size:13px;line-height:1.5}.flag{border-left:3px solid var(--warn);padding:8px 10px;background:var(--wash);border-radius:0 8px 8px 0;font-size:12.5px;margin:8px 0}
+td.fam{font-size:11px;color:var(--muted)}tr.prod td{background:var(--wash)}tr.prod td.t::after{content:var(--construction-production," · production");font-size:10px;color:var(--muted);font-weight:400}
+.legendbox{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.legendbox button{cursor:pointer;font-size:11.5px;padding:3px 9px;border-radius:999px;border:1px solid var(--border);background:var(--surface)}
+.legendbox button.off{opacity:.38}.legendbox button i{display:inline-block;width:8px;height:8px;border-radius:2px;flex:0 0 8px}
+.meth{margin-top:8px}.meth>summary{cursor:pointer;color:var(--ink2);font-size:12px;font-weight:600}.dsec{grid-column:1/-1;margin:2px 2px -2px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.csub{display:block;margin-top:2px;font-size:10px;font-weight:400;color:var(--muted);white-space:normal}.corecols .x{display:none}
+#cmp{table-layout:fixed}#cmp th:first-child,#cmp td:first-child{width:28%}#perf-panel .tblwrap{max-height:560px}#perf{table-layout:fixed}#perf th:first-child,#perf td:first-child{width:18%;white-space:normal}
+.diag-collapsed #diagnostics~section{display:none}
+@media(max-width:700px){#cmp{font-size:11px}#cmp th,#cmp td{padding:6px 4px}.csub{font-size:9px}.selbar{align-items:stretch}.selbar .chip{min-height:40px}.legendbox button{min-height:36px}.dsec{margin-top:4px}}
+html[data-language="zh"]{--construction-production:" · 生产方案"}html[data-language="ja"]{--construction-production:" · 運用手法"}
+</style></head>
+<body class="constructions-page diag-collapsed">
+<header class="top"><h1>Market Intel</h1><span class="sub">portfolio construction comparison</span><nav class="tabs" id="nav"></nav><div class="chips hdr" id="hdr"></div><button type="button" class="chip btn" id="btn-theme" aria-pressed="false" aria-label="Switch theme">◐</button></header>
+<nav class="subtabs" id="subnav"></nav>
+<main class="g2">
+ <div id="banner" style="grid-column:1/-1"></div>
+ <section class="panel wide" id="cmp-panel"><div class="head"><h2>Production vs best vs equal weight</h2><span class="small" id="cmp-note"></span></div>
+  <div id="flags-crit"></div>
+  <div class="kpis" id="kpis"></div>
+  <div class="tblwrap" style="margin-top:10px"><table id="cmp"><caption class="sr-only">The production construction, the best diagnostic construction and equal weight on the same walk-forward record</caption><thead><tr id="cmp-head"></tr></thead><tbody></tbody></table></div>
+  <details class="meth" id="meth"><summary>What this compares · method, gates and caveats</summary>
+   <div class="chips" style="margin:8px 0 4px"><button type="button" class="chip btn" id="btn-run">⟳ Re-run (views on)</button><button type="button" class="chip btn" id="btn-run-noviews">⟳ Re-run (prior only)</button><span class="small" id="run-msg"></span></div>
+   <div class="lead" id="lead"></div><div id="flags"></div></details></section>
+ <section class="panel wide" id="eq-panel"><div class="head"><h2>Equity curves</h2><div class="periodbar" id="periods"></div></div>
+  <div class="small" id="eq-note" style="margin-bottom:4px"></div>
+  <div class="selbar" role="group" aria-label="Series selection"><button type="button" class="chip btn" id="sel-default">Default 4</button><button type="button" class="chip btn" id="sel-all">Show all</button><button type="button" class="chip btn" id="sel-none">Clear</button><span class="sep"></span>
+   <button type="button" class="chip btn" id="sel-risk">Risk-only</button><button type="button" class="chip btn" id="sel-ret">Return-aware</button><button type="button" class="chip btn" id="sel-top">Top 5 by Sharpe</button>
+   <span class="sep"></span><span class="small" id="sel-count"></span></div>
+  <div class="legendbox" id="legend" role="group" aria-label="Show or hide series"></div><div id="p-eq" class="plot tall"></div>
+  <details class="meth"><summary>Window metrics for the selected series</summary>
+  <div class="tblwrap"><table id="win"><thead><tr><th>Method</th><th class="num">Return</th><th class="num">CAGR</th><th class="num">Vol</th><th class="num">Sharpe</th><th class="num">Sortino</th><th class="num">Max DD</th><th class="num">Calmar</th></tr></thead><tbody></tbody></table></div></details></section>
+ <section class="panel wide" id="perf-panel"><div class="head"><h2>Performance matrix</h2><div class="chips"><button type="button" class="chip btn" id="perf-more" aria-pressed="false">More columns</button></div></div>
+  <p class="small" id="perf-note" style="margin:0 0 6px"></p>
+  <div class="tblwrap scroll"><table id="perf" class="corecols"><thead><tr>
+   <th data-k="label">Method</th><th data-k="family">Family</th><th class="num" data-k="cagr">CAGR</th><th class="num" data-k="vol">Vol</th><th class="num" data-k="sharpe">Sharpe</th>
+   <th class="num" data-k="max_drawdown">Max DD</th><th class="num" data-k="rk_var99_10d">VaR99 10D</th><th class="num" data-k="rk_es975_10d">ES97.5 10D</th><th class="num" data-k="rk_te">TE</th>
+   <th class="num x" data-k="sortino">Sortino</th><th class="num x" data-k="calmar">Calmar</th><th class="num x" data-k="monthly_cvar95">CVaR95</th><th class="num x" data-k="worst_month">Worst mo.</th><th class="num x" data-k="positive_months">Pos. mo.</th>
+   <th class="num x" data-k="beta_vs_bench">Beta</th><th class="num x" data-k="information_ratio">IR</th><th class="num x" data-k="avg_turnover">Turnover</th><th class="num x" data-k="cost_drag_pa">Cost p.a.</th><th class="num x" data-k="avg_effective_n">Eff. N</th></tr></thead><tbody></tbody></table></div>
+ </section>
+ <section class="panel wide" id="riskmx-panel"><div class="head"><h2>Risk matrix</h2>
+  <span class="small">frozen-position historical VaR / Expected Shortfall / tracking error per construction — separate from the performance matrix, which is a return record, not a risk one</span></div>
+  <details class="meth"><summary>Show full matrix, layers, 1-day tails and confidence intervals</summary><div id="riskmx"></div></details></section>
+ <h3 class="dsec" id="diagnostics"><span>Diagnostics</span><button type="button" class="chip btn" id="diag-toggle" aria-expanded="false">Show diagnostics</button></h3>
+ <section class="panel"><div class="head"><h2>Drawdown</h2></div><div id="p-dd" class="plot"></div></section>
+ <section class="panel"><div class="head"><h2>Rolling 1-year Sharpe</h2></div><div id="p-roll" class="plot"></div></section>
+ <section class="panel"><div class="head"><h2>Risk vs return</h2><span class="small">bubble = average effective breadth</span></div><div id="p-scatter" class="plot"></div></section>
+ <section class="panel"><div class="head"><h2>Turnover vs Sharpe</h2><span class="small">cost of running each method</span></div><div id="p-turn" class="plot"></div></section>
+ <section class="panel wide"><div class="head"><h2>Significance vs equal weight</h2><span class="small">monthly excess, Newey-West t (3 lags). |t| &lt; 2 = not distinguishable from 1/N</span></div>
+  <div id="p-t" class="plot"></div></section>
+ <section class="panel wide"><div class="head"><h2>Calendar-year returns</h2><span class="small">a 13-year average hides which years produced the edge · production row highlighted</span></div>
+  <div id="p-years" class="plot tall"></div>
+  <div class="tblwrap scroll"><table id="years"><thead><tr id="years-head"></tr></thead><tbody></tbody></table></div></section>
+ <section class="panel"><div class="head"><h2>Consistency</h2><span class="small">average rank across calendar years, lower is better</span></div><div id="p-consist" class="plot"></div></section>
+ <section class="panel"><div class="head"><h2>Performance by market regime</h2><span class="small" id="reg-note">regimes derived from the benchmark's own path, no lookahead</span></div>
+  <div class="tblwrap"><table id="regimes"><thead><tr><th>Regime</th><th class="num">Share of time</th><th>Method</th><th class="num">CAGR</th><th class="num">Vol</th><th class="num">Sharpe</th></tr></thead><tbody></tbody></table></div></section>
+ <section class="panel wide"><div class="head"><h2>Drawdown episodes</h2><div class="chips"><select id="dd-method"></select></div></div>
+  <div class="tblwrap"><table id="dd"><thead><tr><th>Start</th><th>Trough</th><th>End</th><th class="num">Depth</th><th class="num">Length</th><th class="num">Recovery</th><th>State</th></tr></thead><tbody></tbody></table></div></section>
+ <section class="panel wide"><div class="head"><h2>Return contribution</h2><div class="chips"><select id="c-method"></select><span class="small" id="c-note"></span></div></div>
+  <div class="cmp" style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div id="p-contrib" class="plot tall"></div><div id="p-seg" class="plot tall"></div></div>
+  <div class="tblwrap scroll"><table id="contrib"><thead><tr><th data-k="ticker">Ticker</th><th data-k="segment">Segment</th><th class="num" data-k="contribution">Contribution</th><th class="num" data-k="share">Share</th><th class="num" data-k="avg_weight">Avg weight</th><th class="num" data-k="months_held">Months</th><th class="num" data-k="hit_rate">Hit rate</th></tr></thead><tbody></tbody></table></div></section>
+ <section class="panel wide"><div class="head"><h2>Method reference</h2></div><div class="tblwrap"><table id="reg"><thead><tr><th>Method</th><th>Family</th><th>Reads expected returns</th><th>Description</th></tr></thead><tbody></tbody></table></div></section>
+</main>
+<script>
+renderNav('/constructions');themeInit();let D=null,hidden=new Set(),period='all';
+// risk columns are joined from the risk-by-construction endpoint the matrix below already loads;
+// the window/layer/benchmark shown in the matrix is the one the joined columns quote.
+let RMX=null,RSEL={layer:'model',win:'1y',bench:'te_proxy'},PERFROWS=[],DEFAULTKEYS=[];
+const pretty=v=>String(v==null?'':v).replace(/_/g,' ').replace(/^./,c=>c.toUpperCase());
+const BENCHLAB={te_mandate:'mandate benchmark',te_proxy:'equal-weight proxy',te_index:'SOXX proxy'};
+function riskRow(key){const rows=(RMX&&RMX['comparison_'+RSEL.layer])||[];const rk=key==='production_replica'?'recommended':key;return rows.find(r=>r.construction===rk)||null;}
+function riskCell(v,ok,why){return ok&&v!=null?fmt.pct(v,2):`<span class="na" title="${esc(why||'no risk row for this construction in the risk endpoint')}">—</span>`;}
+const COLOR={};
+function colorFor(k,i){if(!COLOR[k]){const p=pal();COLOR[k]=k==='SOXX'?p.gray:p.series[i%8];}return COLOR[k];}
+async function load(){D=await j('/api/research/constructions');const P=pal();
+ if(!D.available){$('#banner').innerHTML=statusBanner(D.run);$('#lead').innerHTML='<div class="empty">'+esc(D.reason||'')+'</div>';pstat();return;}
+ // A genuinely absent artifact leaves the comparison panels empty.  A stale artifact is still returned by
+ // the API as an explicitly historical, decision-unusable comparison and is rendered below with a warning.
+ if(!D.walk_forward){
+  $('#banner').innerHTML=statusBanner(D.run);
+  const f=D.artifact_freshness||{};
+  const why=(f.stale_reasons||[]).map(r=>({code_hash:'the code that produces the curve has changed',
+    price_hash:'the price history has changed',universe_hash:'the universe has changed',
+    schema:'the artifact uses an older schema'})[r]||r);
+  $('#lead').innerHTML='<div class="empty"><b>Walk-forward results withheld.</b> '+
+   esc(D.reason||'this artifact is stale')+
+   (why.length?'<br><span class="small">Stale because: '+esc(why.join('; '))+'.</span>':'')+
+   '<br><span class="small">The Risk matrix below reads a different endpoint and is unaffected.</span></div>';
+  ['kpis','legend','win','perf','years','regimes','dd','contrib'].forEach(id=>{const e=$('#'+id);if(e)e.innerHTML='';});
+  document.querySelectorAll('.plot').forEach(e=>{e.innerHTML='<div class="empty small">no current walk-forward artifact</div>';});
+  pstat();return;}
+ const W=D.walk_forward;
+ // Artifact currency and research validity are independent.  A freshly generated
+ // mechanism diagnostic is CURRENT even though its PIT gate keeps decision use closed.
+ const historical=D.artifact_scope?D.artifact_scope!=='CURRENT':D.stale===true;
+ const decisionUsable=D.decision_usable===true;
+ // v2 keeps level-performance figures under `withheld` while the PIT claim gate is closed.  They remain
+ // useful for construction-mechanism comparison, so render them under the prominent diagnostic warning.
+ W.stats=Object.fromEntries(Object.entries(W.stats||{}).map(([k,v])=>[k,{...(v||{}),...((v||{}).withheld||{})}]));
+ const S=W.stats,pr=S.production_replica?'production_replica':D.production_primary;
+ const scopeLabel=D.artifact_scope==='HISTORICAL_STALE_COMPARISON'?'HISTORICAL STALE COMPARISON':'UNVERIFIED HISTORICAL COMPARISON';
+ const staleNote=historical?`<div class="flag bad" role="alert"><b>${esc(t(scopeLabel))} · ${esc(t('NOT DECISION-USABLE.'))}</b> ${esc(D.reason||'The stored comparison has not been verified against current code and data.')} The charts remain visible so prior construction results can be inspected while a current artifact is regenerated or verified.</div>`:'';
+ $('#banner').innerHTML=statusBanner(D.run)+staleNote;
+ const inp=W.inputs||{};
+ $('#hdr').innerHTML=runChip(D.run)+t("<span class=\"chip\">{methods}</span><span class=\"chip\">{rebalances}</span>",{methods:esc(t('{count} methods',{count:W.methods.length})),rebalances:esc(t('{count} rebalances',{count:W.n_rebalances}))})+
+  (historical?`<span class="chip bad">${esc(t(scopeLabel))}</span>`:'')+
+  (!historical&&!decisionUsable?`<span class="chip bad" title="${esc(D.decision_reason||'research validity gate is closed')}">current diagnostic · not decision-usable</span>`:'')+
+  `<span class="chip" title="inputs this walk-forward used - results are deterministic given these; the daily pipeline rewrites market caps, which moves every method">inputs ${esc(inp.universe_hash||'?')} · prices to ${esc(inp.price_last_date||'?')}</span>`;
+ const ranked=Object.entries(S).filter(([k])=>k!==W.benchmark).sort((a,b)=>(b[1].sharpe||0)-(a[1].sharpe||0));
+ const best=ranked[0],prodRank=ranked.findIndex(([k])=>k===pr)+1;
+ const p=W.params;
+ $('#lead').innerHTML=(historical?'<b>'+esc(t('Viewing the last stored historical artifact; it is not the current run.'))+'</b> ':'')+
+  esc(t('Every method uses the same universe, covariance, expected returns, constraints and rebalance dates; only the construction differs, so the spread between curves reflects only the construction.'))+'<br>'+esc(t('Point in time from {start} to {end}: each month end, top {top} names by 12-1 momentum, {years}-year Ledoit-Wolf covariance, {prior}, weights capped at {cap}, net of {cost} bps one-way costs.',{start:W.window[0],end:W.window[1],top:p.top_n,years:p.cov_years,prior:t(p.use_bl_views?'a Black-Litterman posterior from momentum views':'the equilibrium prior only'),cap:fmt.pct(p.max_w,0),cost:p.cost_bps}))+
+  '<br><b>'+esc(t('{best} ranks first on Sharpe ({sharpe}); the production default, {production}, ranks {rank} of {count} ({productionSharpe}).',{best:t(best[1].label),sharpe:fmt.num(best[1].sharpe,2),production:t((S[pr]||{}).label||pr),rank:prodRank,count:ranked.length,productionSharpe:fmt.num((S[pr]||{}).sharpe,2)}))+'</b>';
+ const sig=Object.entries(W.versus||{}).filter(([k,v])=>Math.abs(v.t_hac||0)>=2&&k!==W.benchmark);
+ const flags=[['', `Survivorship: the selection universe is today's constituents, so every method beats ${esc(W.benchmark||'the benchmark')} by construction. Only the spread <i>between methods</i> is meaningful.`]];
+ if(!sig.length)flags.unshift(['', `<b>No method is statistically distinguishable from equal weight.</b> The largest Newey-West t against 1/N is ${fmt.num(Math.max(...Object.entries(W.versus||{}).filter(([k])=>k!==W.benchmark).map(([,v])=>Math.abs(v.t_hac||0))),2)}, inside the noise band. Rank order here is a weak preference, not evidence.`]);
+ if(historical)flags.unshift(['bad',`<b>Historical artifact:</b> these figures are stale or could not be verified against current code/data/schema. They are retained for inspection only and cannot support a current portfolio decision.`]);
+ if(sig.length)flags.unshift(['ok',`Clears |t| ≥ 2 vs equal weight: ${sig.map(([k])=>esc(t(S[k].label))).join(', ')}.`]);
+ // PIT data contract: while the gate is closed nothing on this page may read as a performance claim
+ const gate=W.pit_gate||{};
+ if(gate.alpha_claim_available===false){
+  flags.unshift(['bad',`<b>${esc(W.claim_status||'MECHANISM DIAGNOSTIC ONLY')}</b> — ${esc(gate.headline||'')}.
+   Missing: ${(gate.missing||[]).map(esc).join(', ')}. Permitted use: ${(gate.permitted_use||[]).join(', ')}.
+   <b>Not permitted:</b> ${(gate.forbidden_use||[]).join('; ')}. The curves below show how the constructions differ from one another;
+   their <i>level</i> is not evidence of return because the universe, share counts and delistings are not point-in-time.`]);}
+ if(!historical&&!decisionUsable&&gate.alpha_claim_available!==false)
+  flags.unshift(['bad',`<b>CURRENT ARTIFACT · NOT DECISION-USABLE.</b> ${esc(D.decision_reason||'The research validity gate is closed.')}`]);
+ const ex=W.execution||{};
+ if(ex.signal_at)flags.push(['',`Execution: signal at ${esc(ex.signal_at)}, fill at ${esc(ex.fill_at)}, accrual from ${esc(ex.accrual_from)}; ${esc(ex.cost_model||'')}. ${esc(ex.note||'')}`]);
+ if(W.n_data_events)flags.push(['',`${W.n_data_events} holding period(s) had a name without bars; those names were dropped and their weight redistributed — never zero-filled.`]);
+ const crit=flags.filter(([c])=>c==='bad'),rest=flags.filter(([c])=>c!=='bad');
+ const miss=(gate.missing||[]).map(pretty).join(', ');
+ $('#flags-crit').innerHTML=crit.length?`<div class="flag bad"><b>${historical?'HISTORICAL ARTIFACT · NOT DECISION-USABLE':'MECHANISM DIAGNOSTIC ONLY · performance and alpha claims withheld'}.</b> ${miss?'Missing '+esc(miss)+'. ':''}Use this page to compare construction mechanics only; open “method, gates and caveats” for the complete restrictions and lineage.</div>`:'';
+ // The collapsed methodology keeps the complete audit trail; only blocking items are repeated above the comparison.
+ $('#flags').innerHTML=flags.map(([c,t])=>`<div class="flag ${c}">${t}</div>`).join('');
+ const ew=S.equal_weight||{};
+ $('#kpis').innerHTML=[['Best Sharpe',fmt.num(best[1].sharpe,2),esc(best[1].label)],['Production',fmt.num((S[pr]||{}).sharpe,2),`${esc((S[pr]||{}).label||pr)} · rank ${prodRank}/${ranked.length}`],
+  ['Equal weight',fmt.num(ew.sharpe,2),'the null hypothesis'],['Sharpe spread',fmt.num((best[1].sharpe||0)-(ranked[ranked.length-1][1].sharpe||0),2),'best minus worst method'],
+  [t('Best IR vs {benchmark}',{benchmark:W.benchmark||''}),fmt.num(Math.max(...ranked.map(([,v])=>v.information_ratio||-9)),2),'information ratio'],
+  ['Cheapest turnover',fmt.pct(Math.min(...ranked.map(([,v])=>v.avg_turnover||9))),'per month']].map(([l,v,d])=>`<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${esc(d)}</div></div>`).join('');
+ renderCompare(S,pr,best[0],W.benchmark);
+ const keys=[...W.methods,W.benchmark].filter(Boolean);
+ keys.forEach((k,i)=>colorFor(k,i));
+ // four curves answer the question this page exists for; the other eleven are one click away
+ DEFAULTKEYS=[pr,best[0],'equal_weight',W.benchmark].filter((v,i,a)=>v&&a.indexOf(v)===i&&keys.indexOf(v)>=0);
+ hidden=new Set(keys.filter(k=>DEFAULTKEYS.indexOf(k)<0));
+ renderLegend();
+ pickPeriod(period);
+ const setSel=ks=>{hidden=new Set(keys.filter(k=>!ks.includes(k)));renderLegend();draw();};
+ $('#sel-all').onclick=()=>setSel(keys);
+ $('#sel-default').onclick=()=>setSel(DEFAULTKEYS);
+ $('#sel-none').onclick=()=>setSel([]);
+ $('#sel-risk').onclick=()=>setSel(W.methods.filter(k=>!(D.registry[k]||{}).needs_mu).concat(W.benchmark?[W.benchmark]:[]));
+ $('#sel-ret').onclick=()=>setSel(W.methods.filter(k=>(D.registry[k]||{}).needs_mu).concat(W.benchmark?[W.benchmark]:[]));
+ $('#sel-top').onclick=()=>setSel([...W.methods].sort((a,b)=>(S[b].sharpe||0)-(S[a].sharpe||0)).slice(0,5).concat(W.benchmark?[W.benchmark]:[]));
+ draw();drawDecomp();
+ PERFROWS=Object.entries(S).map(([k,v])=>({key:k,...v}));
+ renderPerf();
+ $('#reg tbody').innerHTML=Object.entries(D.registry).map(([k,v])=>`<tr><td class="t">${esc(t(v.label))}</td><td class="fam">${esc(t(v.family))}</td><td>${v.needs_mu?'<b>'+esc(t('yes'))+'</b>':esc(t('no'))}</td><td class="small">${esc(t(v.desc))}</td></tr>`).join('');
+ pstat();}
+function pickPeriod(p){period=p;renderPeriodBar($('#periods'),period,pickPeriod,(D.walk_forward.cumulative.dates||[]).length);draw();}
+function renderLegend(){const W=D.walk_forward,S=W.stats;const keys=[...W.methods,W.benchmark].filter(Boolean);
+ $('#legend').innerHTML=keys.map(k=>`<button type="button" data-k="${k}" class="${hidden.has(k)?'off':''}" aria-pressed="${hidden.has(k)?'false':'true'}" title="${esc((D.registry[k]||{}).desc||'benchmark')}"><i style="background:${colorFor(k)}"></i>${esc(t((S[k]||{}).label||k))}</button>`).join('');
+ $$('#legend button').forEach(el=>el.addEventListener('click',()=>{const k=el.dataset.k;const off=hidden.has(k);
+   off?hidden.delete(k):hidden.add(k);el.classList.toggle('off');el.setAttribute('aria-pressed',off?'true':'false');draw();}));
+ $('#sel-count').textContent=t("{shown} of {total} shown",{shown:keys.length-hidden.size,total:keys.length});}
+function draw(){const W=D.walk_forward,S=W.stats,P=pal();const c=W.cumulative;
+ const keys=[...W.methods,W.benchmark].filter(Boolean).filter(k=>!hidden.has(k));
+ const i0=periodStartIndex(c.dates,period), dates=c.dates.slice(i0);
+ const win={};[...W.methods,W.benchmark].filter(Boolean).forEach(k=>{win[k]=windowMetrics(c.dates,c[k],i0,W.params.rf||0.03);});
+ const line=k=>({type:'scatter',mode:'lines',x:dates,y:(win[k]?win[k].rebased:[]).map(v=>v*100),name:t((S[k]||{}).label||k),line:{width:k===D.production_primary?2.6:k===W.benchmark?1.4:1.6,color:colorFor(k),dash:k===W.benchmark?'dot':'solid'},hovertemplate:'%{x}<br>'+((S[k]||{}).label||k)+': %{y:.1f}<extra></extra>'});
+ const logScale=(period==='all'||period==='1260'||period==='756');
+ plot('p-eq',keys.map(line),{yaxis:logScale?{type:'log',title:'growth of 100 (log)'}:{title:'growth of 100'},hovermode:'x unified',showlegend:false,margin:{l:56,r:16,t:16,b:40}});
+ $('#eq-note').textContent=t("{period}: {start} → {end} · rebased to 100 at the window start · net of {cost} bps · click a legend entry to isolate",{period:periodLabel(period),start:dates[0],end:dates[dates.length-1],cost:W.params.cost_bps});
+ plot('p-dd',keys.map(k=>({type:'scatter',mode:'lines',x:dates,y:win[k]?win[k].drawdown:[],name:t((S[k]||{}).label||k),line:{width:1.4,color:colorFor(k)},hovertemplate:'%{x}: %{y:.1%}<extra>'+((S[k]||{}).label||k)+'</extra>'})),{yaxis:{tickformat:'.0%'},hovermode:'x unified',showlegend:false,margin:{l:52,r:10,t:16,b:36}});
+ const rows=keys.map(k=>({k,label:(S[k]||{}).label||k,...(win[k]||{})})).filter(r=>r.cagr!=null).sort((a,b)=>(b.sharpe||-9)-(a.sharpe||-9));
+ $('#win tbody').innerHTML=rows.map(r=>`<tr class="${r.k===D.production_primary?'prod':''}"><td class="t">${esc(t(r.label))}</td><td class="num ${cls(r.total_return)}">${fmt.pct(r.total_return)}</td><td class="num ${cls(r.cagr)}">${fmt.pct(r.cagr)}</td><td class="num">${fmt.pct(r.vol)}</td><td class="num" style="font-weight:600">${sharpeCell(r)}</td><td class="num">${fmt.num(r.sortino,2)}</td><td class="num neg">${fmt.pct(r.max_drawdown)}</td><td class="num">${fmt.num(r.calmar,2)}</td></tr>`).join('')||'<tr><td colspan="8" class="empty">nothing selected</td></tr>';
+ const rs=W.rolling_sharpe;
+ plot('p-roll',keys.map(k=>({type:'scatter',mode:'lines',x:rs.dates,y:rs[k],name:t((S[k]||{}).label||k),line:{width:1.4,color:colorFor(k)},connectgaps:false,hovertemplate:'%{x}: %{y:.2f}<extra>'+((S[k]||{}).label||k)+'</extra>'})),{yaxis:{title:'rolling Sharpe'},hovermode:'x unified',showlegend:false,margin:{l:52,r:10,t:16,b:36}});
+ const ks=W.methods.filter(k=>!hidden.has(k));
+ plot('p-scatter',[{type:'scatter',mode:'markers+text',x:ks.map(k=>S[k].vol),y:ks.map(k=>S[k].cagr),text:ks.map(k=>t(S[k].label)),textposition:'top center',textfont:{size:9,color:P.muted},marker:{size:ks.map(k=>Math.max(8,Math.min(30,(S[k].avg_effective_n||8)*1.8))),color:ks.map(k=>S[k].needs_mu?P.series[1]:P.pos),opacity:.8,line:{width:2,color:P.surface}},hovertemplate:'%{text}<br>vol %{x:.1%} · CAGR %{y:.1%}<extra></extra>'}],
+  {xaxis:{title:'volatility',tickformat:'.0%'},yaxis:{title:'CAGR',tickformat:'.0%'},showlegend:false,margin:{l:56,r:16,t:16,b:44}});
+ plot('p-turn',[{type:'scatter',mode:'markers+text',x:ks.map(k=>S[k].avg_turnover),y:ks.map(k=>S[k].sharpe),text:ks.map(k=>t(S[k].label)),textposition:'top center',textfont:{size:9,color:P.muted},marker:{size:11,color:ks.map(k=>S[k].needs_mu?P.series[1]:P.pos),line:{width:2,color:P.surface}},hovertemplate:'%{text}<br>turnover %{x:.1%}/mo · Sharpe %{y:.2f}<extra></extra>'}],
+  {xaxis:{title:'average monthly turnover',tickformat:'.0%'},yaxis:{title:'Sharpe'},showlegend:false,margin:{l:56,r:16,t:16,b:44}});
+ const vs=Object.entries(W.versus||{}).filter(([k])=>k!==W.benchmark).sort((a,b)=>a[1].t_hac-b[1].t_hac);
+ plot('p-t',[{type:'bar',orientation:'h',x:vs.map(([,v])=>v.t_hac),y:vs.map(([k])=>t((S[k]||{}).label||k)),marker:{color:vs.map(([,v])=>Math.abs(v.t_hac)>=2?P.pos:P.gray)},hovertemplate:'%{y}: t %{x:.2f}<extra></extra>'}],
+  {xaxis:{title:'Newey-West t vs equal weight',zeroline:true,zerolinecolor:P.axis},yaxis:{automargin:true,tickfont:{size:10}},showlegend:false,margin:{l:10,r:20,t:16,b:44},
+   shapes:[-2,2].map(v=>({type:'line',x0:v,x1:v,y0:-.5,y1:vs.length-.5,line:{color:P.neg,width:1,dash:'dot'}}))});}
+function renderCompare(S,pr,bestKey,bench){
+ const cols=[['Production replica',pr],['Best diagnostic',bestKey],['Equal weight','equal_weight']]
+  .filter(([,k])=>k&&S[k]).filter(([,k],i,a)=>a.findIndex(x=>x[1]===k)===i);
+ $('#cmp-head').innerHTML='<th scope="col">Metric</th>'+cols.map(([t,k])=>`<th scope="col" class="num">${esc(t)}<span class="csub">${esc((S[k]||{}).label||pretty(k))}</span></th>`).join('');
+ const rows=[['CAGR',k=>fmt.pct(S[k].cagr)],['Volatility',k=>fmt.pct(S[k].vol)],['Sharpe',k=>fmt.num(S[k].sharpe,2)],
+  ['Max drawdown',k=>fmt.pct(S[k].max_drawdown)],[t('Information ratio vs {benchmark}',{benchmark:pretty(bench||'benchmark')}),k=>fmt.num(S[k].information_ratio,2)],
+  ['Turnover per month',k=>fmt.pct(S[k].avg_turnover)]];
+ $('#cmp tbody').innerHTML=rows.map(([l,f])=>`<tr><td class="t">${esc(t(l))}</td>`+cols.map(([,k])=>`<td class="num">${f(k)}</td>`).join('')+'</tr>').join('');
+ $('#cmp-note').textContent='same universe, covariance, expected returns, constraints and rebalance dates — only the construction differs';}
+// header and row share one column list, so a column can never be added to one and not the other
+const PERFCOLS=[
+ ['label','Method','',r=>`<td class="t">${esc(t(r.label||pretty(r.key)))}</td>`],
+ ['family','Family','',r=>`<td class="fam">${esc(t(pretty(r.family||'')))}</td>`],
+ ['cagr','CAGR','num',r=>`<td class="num">${fmt.pct(r.cagr)}</td>`],
+ ['vol','Vol','num',r=>`<td class="num">${fmt.pct(r.vol)}</td>`],
+ ['sharpe','Sharpe','num',r=>`<td class="num" style="font-weight:600">${sharpeCell(r)}</td>`],
+ ['max_drawdown','Max DD','num',r=>`<td class="num neg">${fmt.pct(r.max_drawdown)}</td>`],
+ ['rk_var99_10d','VaR99 10D','num',r=>`<td class="num">${riskCell(r.rk_var99_10d,r.rk_ok,r.rk_why)}</td>`],
+ ['rk_es975_10d','ES97.5 10D','num',r=>`<td class="num">${riskCell(r.rk_es975_10d,r.rk_ok,r.rk_why)}</td>`],
+ ['rk_te','TE','num',r=>`<td class="num">${riskCell(r.rk_te,r.rk_ok,r.rk_why)}</td>`],
+ ['sortino','Sortino','num x',r=>`<td class="num x">${fmt.num(r.sortino,2)}</td>`],
+ ['calmar','Calmar','num x',r=>`<td class="num x">${fmt.num(r.calmar,2)}</td>`],
+ ['monthly_cvar95','CVaR95','num x',r=>`<td class="num neg x">${fmt.pct(r.monthly_cvar95)}</td>`],
+ ['worst_month','Worst mo.','num x',r=>`<td class="num neg x">${fmt.pct(r.worst_month)}</td>`],
+ ['positive_months','Pos. mo.','num x',r=>`<td class="num x">${fmt.pct(r.positive_months,0)}</td>`],
+ ['beta_vs_bench','Beta','num x',r=>`<td class="num x">${fmt.num(r.beta_vs_bench,2)}</td>`],
+ ['information_ratio','IR','num x',r=>`<td class="num x">${fmt.num(r.information_ratio,2)}</td>`],
+ ['avg_turnover','Turnover','num x',r=>`<td class="num x">${fmt.pct(r.avg_turnover)}</td>`],
+ ['cost_drag_pa','Cost p.a.','num x',r=>`<td class="num x">${fmt.pct(r.cost_drag_pa)}</td>`],
+ ['avg_effective_n','Eff. N','num x',r=>`<td class="num x">${fmt.num(r.avg_effective_n,1)}</td>`]];
+function renderPerf(){
+ if(!D||!D.walk_forward||!PERFROWS.length)return;
+ const pr=D.walk_forward.stats.production_replica?'production_replica':D.production_primary,wk=RSEL.win;
+ PERFROWS.forEach(r=>{const rr=riskRow(r.key);
+  const ok=!!rr&&rr[wk+'_available']===true;
+  r.rk_ok=ok;
+  r.rk_why=rr?(rr[wk+'_reason']||''):('the risk endpoint has no construction named '+r.key);
+  r.rk_var99_10d=ok?rr[wk+'_var99_10d_overlap']:null;
+  r.rk_es975_10d=ok?rr[wk+'_es975_10d_overlap']:null;
+  const ts=rr?rr[wk+'_'+RSEL.bench+'_status']:null;
+  r.rk_te=ok&&(!ts||ts==='available')?rr[wk+'_'+RSEL.bench]:null;});
+ const t=document.getElementById('perf');
+ const hr=t.querySelector&&t.querySelector('thead tr');
+ if(hr)hr.innerHTML=PERFCOLS.map(([k,l,c])=>`<th scope="col" class="${c}" data-k="${k}">${esc(l)}</th>`).join('');
+ sortable('perf',PERFROWS,r=>`<tr class="${r.key===pr?'prod':''}">`+PERFCOLS.map(c=>c[3](r)).join('')+'</tr>','sharpe',true,
+  {card:r=>`<div class="card" role="listitem"><div class="ct"><a href="#perf" class="rl">${esc(t(r.label||pretty(r.key)))}</a><span class="cs">${esc(t(pretty(r.family||'')))}</span></div>`+
+    `<div class="cm"><b>CAGR</b><span>${fmt.pct(r.cagr)}</span><b>Vol</b><span>${fmt.pct(r.vol)}</span><b>Sharpe</b><span>${sharpeCell(r)}</span>`+
+    `<b>Max DD</b><span>${fmt.pct(r.max_drawdown)}</span><b>VaR99 10D</b><span>${riskCell(r.rk_var99_10d,r.rk_ok,r.rk_why)}</span>`+
+    `<b>ES97.5 10D</b><span>${riskCell(r.rk_es975_10d,r.rk_ok,r.rk_why)}</span><b>TE</b><span>${riskCell(r.rk_te,r.rk_ok,r.rk_why)}</span></div></div>`});
+ $('#perf-note').innerHTML='Point-in-time, net of costs. <b>Sharpe is a historical walk-forward ratio</b> on a monthly-changing book and is not comparable with the ex-ante Sharpe on the current-book page; it does not validate the strategy. '+
+  'VaR99 10D, ES97.5 10D and TE are joined from the risk matrix below at the '+esc(RSEL.win.toUpperCase())+' window, '+esc(pretty(RSEL.layer))+
+  ' layer, '+esc(BENCHLAB[RSEL.bench]||RSEL.bench)+'. Production replica uses the endpoint\'s canonical executable “recommended” row; a series with no portfolio row (such as the index) shows a dash.';}
+async function pstat(){try{const s=await j('/api/research/constructions/status');if(s.running){$('#run-msg').textContent=t('running…');setTimeout(pstat,5000);}else if(s.returncode!=null)$('#run-msg').textContent=s.returncode===0?t('last run ok'):t('last run failed ({code})',{code:s.returncode});}catch(e){}}
+async function run(noViews){$('#run-msg').textContent=t('starting…');try{const r=await j('/api/research/constructions/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({no_bl_views:!!noViews})});$('#run-msg').textContent=r.started?t('running…'):t('already running');setTimeout(pstat,2000);setTimeout(load,200000);}catch(e){$('#run-msg').textContent=t('failed');}}
+$('#btn-run').addEventListener('click',()=>run(false));$('#btn-run-noviews').addEventListener('click',()=>run(true));
+$('#diag-toggle').addEventListener('click',()=>{const b=$('#diag-toggle'),open=document.body.classList.contains('diag-collapsed');document.body.classList.toggle('diag-collapsed',!open);b.setAttribute('aria-expanded',open?'true':'false');b.textContent=open?'Hide diagnostics':'Show diagnostics';if(open&&D&&D.walk_forward)requestAnimationFrame(()=>{draw();drawDecomp();});});
+$('#perf-more').addEventListener('click',()=>{const b=$('#perf-more'),t=document.getElementById('perf');
+ const on=b.getAttribute('aria-pressed')==='true';b.setAttribute('aria-pressed',on?'false':'true');
+ t.classList.toggle('corecols',on);b.textContent=on?'More columns':'Core columns';
+ announce(on?'Showing core columns':'Showing all columns');});
+
+function drawDecomp(){const W=D.walk_forward,S=W.stats,P=pal(),dc=W.decomposition;if(!dc)return;const pr=S.production_replica?'production_replica':D.production_primary;
+ // ---- calendar years: heatmap + table
+ const yrs=dc.calendar_years.years, ret=dc.calendar_years.returns;
+ const order=[...W.methods].sort((a,b)=>(S[b].sharpe||0)-(S[a].sharpe||0)).concat(W.benchmark?[W.benchmark]:[]);
+ const z=order.map(m=>yrs.map(y=>ret[m]&&ret[m][y]!=null?ret[m][y]*100:null));
+ plot('p-years',[{type:'heatmap',z:z,x:yrs.map(String),y:order.map(m=>t((S[m]||{}).label||m)),colorscale:[[0,P.neg],[0.5,P.mid],[1,P.pos]],zmid:0,xgap:2,ygap:2,
+  hovertemplate:'%{y} · %{x}: %{z:.1f}%<extra></extra>',colorbar:{thickness:10,tickfont:{size:10},ticksuffix:'%'}}],{margin:{l:170,r:10,t:10,b:36},yaxis:{automargin:true,tickfont:{size:10}},xaxis:{side:'top'}});
+ $('#years-head').innerHTML='<th>Method</th>'+yrs.map(y=>`<th class="num">${y}</th>`).join('');
+ $('#years tbody').innerHTML=order.map(m=>`<tr class="${m===pr?'prod':''}"><td class="t">${esc(t((S[m]||{}).label||m))}</td>`+yrs.map(y=>{const v=ret[m]?ret[m][y]:null;return `<td class="num ${cls(v)}">${v==null?'':fmt.pct(v,0)}</td>`;}).join('')+'</tr>').join('');
+ // ---- consistency
+ const cs=dc.consistency, ck=Object.keys(cs).filter(k=>k!==W.benchmark).sort((a,b)=>cs[b].avg_rank-cs[a].avg_rank);
+ plot('p-consist',[{type:'bar',orientation:'h',x:ck.map(k=>cs[k].avg_rank),y:ck.map(k=>t((S[k]||{}).label||k)),marker:{color:ck.map(k=>k===pr?P.series[1]:P.pos)},
+  customdata:ck.map(k=>[cs[k].top3_years,cs[k].bottom3_years,cs[k].n_years]),hovertemplate:'%{y}<br>avg rank %{x:.2f}<br>top-3 in %{customdata[0]} of %{customdata[2]} years · bottom-3 in %{customdata[1]}<extra></extra>'}],
+  {xaxis:{title:'average rank across years'},yaxis:{automargin:true,tickfont:{size:10}},margin:{l:10,r:16,t:10,b:40}});
+ // ---- regimes
+ const rg=dc.regimes||{};const show=['max_diversification','mean_variance',pr,'equal_weight'].filter((v,i,a)=>v&&a.indexOf(v)===i&&S[v]);
+ $('#regimes tbody').innerHTML=Object.entries(rg).map(([name,v])=>show.map((m,i)=>{const e=v[m];if(!e)return '';
+  return `<tr class="${m===pr?'prod':''}">${i===0?`<td class="t" rowspan="${show.length}">${esc(name)}</td><td class="num" rowspan="${show.length}">${fmt.pct(v.share_of_time,0)}</td>`:''}<td>${esc(t((S[m]||{}).label||m))}</td><td class="num ${cls(e.cagr)}">${fmt.pct(e.cagr)}</td><td class="num">${fmt.pct(e.vol)}</td><td class="num" style="font-weight:600">${fmt.num(e.sharpe,2)}</td></tr>`;}).join('')).join('');
+ // ---- drawdown episodes + contribution selectors
+ const sel1=$('#dd-method'), sel2=$('#c-method');
+ if(!sel1.options.length){const opts=W.methods.map(m=>`<option value="${m}"${m===pr?' selected':''}>${esc(t(S[m].label))}</option>`).join('');sel1.innerHTML=opts;sel2.innerHTML=opts;
+  sel1.addEventListener('change',drawDD);sel2.addEventListener('change',drawContrib);}
+ drawDD();drawContrib();}
+function drawDD(){const W=D.walk_forward,eps=(W.decomposition.drawdown_episodes||{})[$('#dd-method').value]||[];
+ $('#dd tbody').innerHTML=eps.length?eps.map(e=>`<tr><td>${e.start}</td><td>${e.trough}</td><td>${e.end||'—'}</td><td class="num neg" style="font-weight:600">${fmt.pct(e.depth)}</td><td class="num">${e.length_days}d</td><td class="num">${e.recovery_days!=null?e.recovery_days+'d':'—'}</td><td>${e.recovered?esc(t('recovered')):'<b>'+esc(t('ongoing'))+'</b>'}</td></tr>`).join(''):'<tr><td colspan="7" class="empty">no drawdown deeper than 10%</td></tr>';}
+function drawContrib(){const W=D.walk_forward,P=pal(),m=$('#c-method').value,c=(W.decomposition.contribution||{})[m];if(!c)return;
+ $('#c-note').textContent=t("top 5 names = {share} of total contribution · {count} names held at some point",{share:fmt.pct(c.top5_share,0),count:c.n_names_touched});
+ const top=c.by_name.slice(0,15).reverse(), bot=c.by_name.slice(-5);
+ plot('p-contrib',[{type:'bar',orientation:'h',x:top.map(r=>r.contribution),y:top.map(r=>r.ticker),marker:{color:top.map(r=>r.contribution>=0?P.pos:P.neg)},
+  customdata:top.map(r=>[r.avg_weight,r.months_held,r.hit_rate]),hovertemplate:'%{y}: %{x:.2f}<br>avg weight %{customdata[0]:.1%} · %{customdata[1]} months · hit %{customdata[2]:.0%}<extra></extra>'}],
+  {title:{text:'top 15 contributors',font:{size:12,color:P.ink2},x:0},margin:{l:52,r:16,t:28,b:36},yaxis:{tickfont:{size:10}}});
+ const sg=c.by_segment.slice().reverse();
+ plot('p-seg',[{type:'bar',orientation:'h',x:sg.map(r=>r.contribution),y:sg.map(r=>r.segment),marker:{color:sg.map(r=>r.contribution>=0?P.series[2]:P.neg)},
+  customdata:sg.map(r=>[r.n_names,r.avg_weight]),hovertemplate:'%{y}: %{x:.2f}<br>%{customdata[0]} names · avg weight %{customdata[1]:.1%}<extra></extra>'}],
+  {title:{text:'by value-chain segment',font:{size:12,color:P.ink2},x:0},margin:{l:180,r:16,t:28,b:36},yaxis:{automargin:true,tickfont:{size:9}}});
+ sortable('contrib',c.by_name,r=>`<tr><td class="t">${r.ticker}</td><td class="fam">${esc(r.segment)}</td><td class="num ${cls(r.contribution)}">${fmt.num(r.contribution,3)}</td><td class="num">${fmt.pct(r.share)}</td><td class="num">${fmt.pct(r.avg_weight)}</td><td class="num">${r.months_held}</td><td class="num">${fmt.pct(r.hit_rate,0)}</td></tr>`,'contribution',true);}
+document.addEventListener('themechange',()=>{Object.keys(COLOR).forEach(k=>delete COLOR[k]);if(D)load();});
+document.addEventListener('languagechange',()=>{if(!D?.walk_forward)return;const W=D.walk_forward,S=W.stats,ranked=Object.entries(S).filter(([k])=>k!==W.benchmark).sort((a,b)=>(b[1].sharpe||0)-(a[1].sharpe||0));renderLegend();renderCompare(S,S.production_replica?'production_replica':D.production_primary,ranked[0]?.[0],W.benchmark);renderPerf();draw();drawDecomp();});
+load().catch(e=>{$('#lead').innerHTML='<div class="empty">'+esc(t('load failed: {message}',{message:e.message}))+'</div>';});
+// the risk matrix auto-loads: a risk view that needs a click is a risk view nobody reads
+riskMatrix(document.getElementById('riskmx'),{id:'rmx',
+ onchange:sel=>{RSEL={layer:sel.layer,win:sel.win,bench:sel.bench};renderPerf();}}).then(d=>{RMX=d;renderPerf();}).catch(e=>{
+ document.getElementById('riskmx').innerHTML='<p class="small na" role="alert">Risk matrix failed to load: '+esc(e.message)+'</p>';});
+</script></body></html>

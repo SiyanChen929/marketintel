@@ -1,0 +1,19 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Market Intel · 调仓历史</title>
+<link rel="stylesheet" href="/static/base.css"><link rel="stylesheet" href="/static/rebalances.css"><script src="/static/base.js"></script><script defer src="/static/rebalances.js"></script></head>
+<body><a class="skip-link" href="#main-content">跳到内容</a>
+<header class="top"><h1>Market Intel</h1><span class="sub">股票选股 · 调仓历史</span><nav class="tabs" id="nav"></nav><div class="chips hdr" id="hdr"></div><button type="button" class="chip btn" id="btn-theme" aria-pressed="false" aria-label="切换主题">◐</button></header>
+<nav class="subtabs" id="subnav"></nav>
+<main class="rb-main" id="main-content">
+ <section class="panel rb-intro"><div class="head"><h2>调仓历史</h2><button type="button" class="chip btn" id="rb-refresh">刷新记录</button></div>
+ <p class="small">每种 construction 每日独立更新并保留目标。默认展示每天的最终归档版本；切换查看方法不改变主组合设置。</p>
+ <div class="rb-methods"><label>Construction method<select id="rb-method"><option value="active">主组合 · 当时选用的方法</option></select></label><label>权重口径<select id="rb-basis"><option value="target">账户目标 · 含现金与波动率控制</option><option value="model">股票内部权重 · 100% 股票</option></select></label></div>
+ <p class="small" id="rb-method-note">各方法与自己的上一期目标比较。历史未保存的目标不补写；可切换口径查看当时的模型权重。</p>
+ <div class="kpis" id="rb-kpis"></div>
+ <p class="rb-disclaimer">目标权重与现金均为计划值；目标调整比例不等于实际换手率。价格漂移会改变现有持仓权重，即使目标不变，也可能需要交易。成交仅来自平台模拟账本，未接入实盘成交。研究状态：NOT VALIDATED。</p>
+ <div id="rb-warnings" role="status"></div></section>
+ <section class="panel rb-list" id="rb-list-panel"><div class="head"><h2>每日记录</h2><span class="small" id="rb-count"></span></div>
+ <div class="rb-filters"><label>开始日期<input type="date" id="rb-from"></label><label>结束日期<input type="date" id="rb-to"></label><label>股票代码<input type="search" id="rb-ticker" placeholder="例如 NVDA" autocomplete="off"></label></div>
+ <label class="rb-check"><input type="checkbox" id="rb-versions"> 包含同日旧版本</label>
+ <div id="rb-list" class="rb-scroll" aria-live="polite"></div></section>
+ <section class="panel rb-detail" id="rb-detail-panel"><div class="head"><h2 id="rb-detail-title" tabindex="-1">选择一条记录</h2></div><div id="rb-detail"></div></section>
+</main></body></html>

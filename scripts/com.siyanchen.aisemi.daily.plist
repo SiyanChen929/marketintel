@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.siyanchen.aisemi.daily</string>
+  <!-- python is launched directly: a zsh wrapper spawned by launchd cannot open scripts inside the privacy-protected Desktop folder -->
+  <key>ProgramArguments</key><array><string>/opt/anaconda3/bin/python3</string><string>-m</string><string>ai_semi_intel.daily</string></array>
+  <key>WorkingDirectory</key><string>__PROJECT__</string>
+  <!-- Polling uses an explicit New York exchange clock in Python, independent of host timezone.
+       It prepares at most one target per session, starting 07:15 ET; holidays and late wakes skip. -->
+  <key>StartInterval</key><integer>300</integer>
+  <key>RunAtLoad</key><true/>
+  <key>StandardOutPath</key><string>__PROJECT__/outputs/logs/aisemi_daily.out</string>
+  <key>StandardErrorPath</key><string>__PROJECT__/outputs/logs/aisemi_daily.out</string>
+  <key>EnvironmentVariables</key><dict><key>PATH</key><string>/opt/anaconda3/bin:/usr/local/bin:/usr/bin:/bin</string></dict>
+</dict></plist>

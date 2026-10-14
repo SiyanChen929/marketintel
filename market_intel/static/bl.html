@@ -1,0 +1,104 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Market Intel · Black-Litterman</title>
+<link rel="stylesheet" href="/static/base.css"><script src="/static/plotly.min.js"></script><script src="/static/base.js"></script>
+<style>.verdict{font-size:13px;line-height:1.5}.verdict b{color:var(--ink)}.flag{border-left:3px solid var(--warn);padding:8px 10px;background:var(--wash);border-radius:0 8px 8px 0;font-size:12.5px;margin:8px 0}
+.flag.bad{border-left-color:var(--crit)}.flag.ok{border-left-color:var(--good)}.eq{font:12px ui-monospace,Menlo,monospace;background:var(--wash);padding:6px 8px;border-radius:6px;display:inline-block;margin:2px 0}
+.chips-tk{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}.chips-tk span{cursor:pointer}td.vw{max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink2)}</style></head>
+<body>
+<header class="top"><h1>Market Intel</h1><span class="sub">Black-Litterman construction &amp; evaluation</span><nav class="tabs" id="nav"></nav><div class="chips hdr" id="hdr"></div><button type="button" class="chip btn" id="btn-theme" aria-pressed="false" aria-label="Switch theme">◐</button></header>
+<nav class="subtabs" id="subnav"></nav>
+<main class="g2">
+ <div id="banner" style="grid-column:1/-1"></div>
+ <section class="panel wide"><div class="head"><h2>Verdict</h2><div class="chips"><span class="chip btn" id="btn-run">⟳ Re-run (full, ~2 min)</span><span class="chip btn" id="btn-run-fast">⟳ Re-run (no walk-forward)</span><span class="small" id="run-msg"></span></div></div>
+  <div class="verdict" id="verdict"></div><div id="flags"></div></section>
+ <section class="panel wide"><div class="kpis" id="kpis"></div></section>
+
+ <section class="panel wide"><div class="head"><h2>Walk-forward: does adding views beat the prior?</h2><span class="small" id="wf-note"></span></div>
+  <div class="note" style="margin-bottom:8px">Point-in-time test: at each month end, a calibrated equilibrium prior plus 12-1 momentum views (the fair-value views exist only as today's snapshot, so they cannot be tested historically). Net of 10 bps one-way costs. The universe is today's constituents, so <b>every arm is survivorship-biased alike</b>: read the spread between arms, never the level.</div>
+  <div id="p-wf" class="plot tall"></div><div class="tblwrap"><table id="wf-stats"><thead><tr><th>Arm</th><th class="num">CAGR</th><th class="num">Vol</th><th class="num">Sharpe</th><th class="num">Sortino</th><th class="num">Max DD</th><th class="num">Calmar</th></tr></thead><tbody></tbody></table></div></section>
+ <section class="panel wide"><div class="head"><h2>BL views vs each alternative</h2><span class="small">monthly returns, Newey-West t (3 lags). |t| &lt; 2 = not distinguishable from zero</span></div>
+  <div class="tblwrap"><table id="vs"><thead><tr><th>Alternative</th><th class="num">Excess p.a.</th><th class="num">Δ Sharpe</th><th class="num">Δ Vol</th><th class="num">Monthly bps</th><th class="num">t (HAC)</th><th class="num">Win rate</th><th class="num">Months</th></tr></thead><tbody></tbody></table></div></section>
+
+ <section class="panel"><div class="head"><h2>Prior → posterior</h2><span class="small">expected excess return per name</span></div><div id="p-mu" class="plot tall"></div></section>
+ <section class="panel"><div class="head"><h2>Weights by construction</h2><span class="small" id="w-note"></span></div><div id="p-w" class="plot tall"></div></section>
+ <section class="panel wide"><div class="head"><h2>Ex-ante comparison</h2><span class="small">all arms scored on the same BL posterior; no return claim, risk and concentration only</span></div>
+  <div class="tblwrap"><table id="cmp"><thead><tr><th data-k="name">Construction</th><th class="num" data-k="exp_return_bl">E[r] on BL</th><th class="num" data-k="vol">Vol</th><th class="num" data-k="sharpe_bl">Sharpe</th><th class="num" data-k="max_weight">Max w</th><th class="num" data-k="effective_n">Effective N</th><th class="num" data-k="max_segment_weight">Max segment</th><th class="num" data-k="turnover_vs_production">Turnover vs prod.</th></tr></thead><tbody></tbody></table></div></section>
+ <section class="panel"><div class="head"><h2>View ablation</h2><span class="small">measured on the mean-variance book</span></div><div id="p-abl" class="plot"></div></section>
+ <section class="panel"><div class="head"><h2>tau sensitivity</h2><span class="small">omega_mode=absolute (the only mode where tau is not cancelled)</span></div><div id="p-tau" class="plot"></div></section>
+ <section class="panel wide"><div class="head"><h2>Where the views come from</h2><span class="small">BL needs views; this is who produced each one</span></div>
+  <div class="note" style="margin-bottom:8px">Black-Litterman does not generate opinions. It blends the market's implied returns (the prior, reverse-engineered from market caps) with <b>views supplied by us</b>. Each source below is a model or feed inside this system, so every tilt can be audited back to the number that caused it.</div>
+  <div class="tblwrap"><table id="prov"><thead><tr><th>Source</th><th>Type</th><th>Field</th><th>Origin</th><th>How q is set</th><th>Confidence</th><th>Caveat</th></tr></thead><tbody></tbody></table></div></section>
+ <section class="panel wide"><div class="head"><h2>Views in force</h2><span class="small" id="v-note"></span></div>
+  <div class="tblwrap scroll"><table id="views"><thead><tr><th data-k="view">View</th><th data-k="source">Source</th><th class="num" data-k="q">q (excess p.a.)</th><th class="num" data-k="confidence">Confidence</th><th class="num" data-k="prior_view_return">Prior says</th><th class="num" data-k="surprise">Surprise</th><th class="num" data-k="abs_impact_bps">Impact (bps)</th><th data-k="detail">Detail</th></tr></thead><tbody></tbody></table></div></section>
+ <section class="panel wide"><div class="head"><h2>Method</h2></div><div class="verdict" id="method"></div></section>
+</main>
+<script>
+renderNav('/bl');themeInit();let D=null;
+const NICE={bl_meanvariance:'BL · mean-variance',prior_meanvariance:'Prior only · mean-variance',bl_equilibrium:'BL · risk parity',bl_capm:'BL (CAPM prior) · risk parity',bl_equilibrium_maxsharpe:'BL · max Sharpe',prior_only:'Prior only · risk parity',production_grinold:'Production (Grinold) · risk parity',production_maxsharpe:'Production (Grinold) · max Sharpe',equal_weight:'Equal weight',cap_weight:'Cap weight',bl_views:'BL + views',equal_weight_wf:'Equal weight'};
+const nm=k=>t(NICE[k]||k);
+async function load(){D=await j('/api/research/bl');renderBL();pstat();}
+function renderBL(){if(!D.available){$('#banner').innerHTML=statusBanner(D.run);$('#verdict').innerHTML='<div class="empty">'+esc(D.reason||'no BL run yet')+'</div>';return;}
+ const C=D.comparison,S=D.summary||{},W=D.walk_forward||{},P=pal();
+ $('#banner').innerHTML=statusBanner(D.run);
+ $('#hdr').innerHTML=runChip(D.run)+t("<span class=\"chip\">{asof}</span><span class=\"chip\">{names}</span><span class=\"chip\">{views}</span><span class=\"chip\">δ {delta}</span>",{asof:esc(t('as of {date}',{date:S.asof||'–'})),names:esc(t('{count} names',{count:C.tickers.length})),views:esc(t('{count} views',{count:C.n_views})),delta:fmt.num(C.delta,3)});
+ // ---- verdict
+ const vp=(W.versus||{}).prior_only||{},ex=W.excess_vs_prior||{};
+ const sig=Math.abs(vp.t_hac||0)>=2;
+ $('#verdict').innerHTML=t('Black-Litterman runs on {count} holdings with {views} views ({sources}). The equilibrium prior is calibrated (δ {delta}) so the basket’s implied excess return equals its CAPM expectation {capm}; the posterior inflates variance by {inflation}.', {count:C.tickers.length,views:C.n_views,sources:esc((C.sources||[]).join(' + ')),delta:fmt.num(C.delta,3),capm:fmt.pct(C.prior_basket_return-C.rf),inflation:fmt.pct(C.cov_diag_inflation)})+
+  '<br><b>'+esc(W.available?t('Out of sample ({start} → {end}, {count} monthly rebalances), adding views earned {return} a year with {vol} more volatility: Sharpe {sharpe}, Newey-West t {tstat}, monthly win rate {win}.',{start:W.window[0],end:W.window[1],count:W.n_rebalances,return:fmt.pct(ex.annualised),vol:fmt.pct(vp.vol_delta),sharpe:(vp.sharpe_delta>=0?'+':'')+fmt.num(vp.sharpe_delta,3),tstat:fmt.num(vp.t_hac,2),win:fmt.pct(vp.win_rate,0)}):t('The walk-forward test has not been run.'))+'</b> '+(W.available?t(sig?' The view layer clears the significance bar.':' That is <b>not statistically distinguishable from the prior</b> on a risk-adjusted basis - the return gain is compensation for extra risk, not evidence of skill.'):'');
+ const flags=[];
+ if(C.mu_agnostic_primary)flags.push(['bad',t("The production construction is <b>{primary}</b>, which ignores expected returns entirely. BL views move E[r] by ~{tilt} bps on average yet change those weights by {turnover}. <b>To act on BL, use a construction that consumes expected returns</b> (mean-variance or max Sharpe).",{primary:esc(C.primary),tilt:fmt.num((C.mu&&C.mu.tilt)?Object.values(C.mu.tilt).reduce((a,b)=>a+Math.abs(b),0)/Object.keys(C.mu.tilt).length*1e4:0,0),turnover:fmt.pct((C.table.bl_equilibrium||{}).turnover_vs_production||0)})]);
+ if(W.available&&!sig)flags.push(['','Views are not validated out of sample. Keep them as a small tilt, not a driver, until the live forward IC turns positive.']);
+ if(W.available)flags.push(['',t("Survivorship: the walk-forward universe is today’s constituents, so all arms beat SOXX by construction (BL +{spread}). That spread is not evidence for BL.",{spread:fmt.pct((W.versus.SOXX||{}).annualised_excess,0)})]);
+ $('#flags').innerHTML=flags.map(([k,t])=>`<div class="flag ${k}">${t}</div>`).join('');
+ // ---- kpis
+ const mv=C.table.bl_meanvariance||{},pr=C.table.prior_meanvariance||{},prod=C.table.production_grinold||{};
+ $('#kpis').innerHTML=[['BL E[r] (mean-var)',fmt.pct(mv.exp_return_bl),'prior only '+fmt.pct(pr.exp_return_bl)],['BL vol',fmt.pct(mv.vol),'prior only '+fmt.pct(pr.vol)],
+  ['Effective N',fmt.num(mv.effective_n,1),'production '+fmt.num(prod.effective_n,1)],['Turnover vs production',fmt.pct(mv.turnover_vs_production),'to adopt BL weights'],
+  ['Walk-forward Sharpe',W.available?fmt.num((W.stats.bl_views||{}).sharpe,2):'–',W.available?'prior '+fmt.num((W.stats.prior_only||{}).sharpe,2)+' · SOXX '+fmt.num((W.stats.SOXX||{}).sharpe,2):''],
+  ['t (HAC) vs prior',W.available?fmt.num(vp.t_hac,2):'–','|t| ≥ 2 required']].map(([l,v,d])=>`<div class="kpi"><div class="l">${esc(t(l))}</div><div class="v">${v}</div><div class="d">${esc(d)}</div></div>`).join('');
+ // ---- walk-forward chart
+ if(W.available){const c=W.cumulative;const keys=Object.keys(c).filter(k=>k!=='dates');
+  plot('p-wf',keys.map((k,i)=>({type:'scatter',mode:'lines',x:c.dates,y:c[k].map(v=>v*100),name:nm(k),line:{width:k==='bl_views'?2.5:1.5,color:k==='bl_views'?P.pos:k==='prior_only'?P.series[1]:P.series[(i%6)+2]},opacity:k==='bl_views'?1:.8,hovertemplate:'%{x}<br>'+nm(k)+': %{y:.0f}<extra></extra>'})),
+   {yaxis:{type:'log',title:'growth of 100 (log)'},hovermode:'x unified',showlegend:true});
+  $('#wf-note').textContent=t("{start} → {end} · {count} rebalances · BL turnover {turnover}/month",{start:W.window[0],end:W.window[1],count:W.n_rebalances,turnover:fmt.pct((W.rebalances||[]).reduce((a,r)=>a+(r.turnover_bl||0),0)/Math.max((W.rebalances||[]).length,1))});
+  $('#wf-stats tbody').innerHTML=Object.entries(W.stats).map(([k,r])=>`<tr${k==='bl_views'?' style="font-weight:600"':''}><td class="t">${esc(nm(k))}</td><td class="num">${fmt.pct(r.cagr)}</td><td class="num">${fmt.pct(r.vol)}</td><td class="num">${fmt.num(r.sharpe,2)}</td><td class="num">${fmt.num(r.sortino,2)}</td><td class="num neg">${fmt.pct(r.max_drawdown)}</td><td class="num">${fmt.num(r.calmar,2)}</td></tr>`).join('');
+  $('#vs tbody').innerHTML=Object.entries(W.versus||{}).map(([k,r])=>`<tr><td class="t">${esc(nm(k))}</td><td class="num ${cls(r.annualised_excess)}">${fmt.pct(r.annualised_excess)}</td><td class="num ${cls(r.sharpe_delta)}">${(r.sharpe_delta>=0?'+':'')+fmt.num(r.sharpe_delta,3)}</td><td class="num">${fmt.pct(r.vol_delta)}</td><td class="num">${fmt.num(r.monthly_mean_bps,0)}</td><td class="num" style="font-weight:600;color:${Math.abs(r.t_hac)>=2?'var(--up)':'var(--muted)'}">${fmt.num(r.t_hac,2)}</td><td class="num">${fmt.pct(r.win_rate,0)}</td><td class="num">${r.n_months}</td></tr>`).join('');}
+ else $('#p-wf').innerHTML='<div class="empty">Walk-forward not run yet.</div>';
+ // ---- prior vs posterior
+ const mu=C.mu||{},tk=C.tickers.slice().sort((a,b)=>(mu.posterior[b]||0)-(mu.posterior[a]||0));
+ plot('p-mu',[{type:'bar',name:'prior',x:tk,y:tk.map(t=>(mu.prior[t]||0)-C.rf),marker:{color:P.gray}},
+  {type:'bar',name:'posterior',x:tk,y:tk.map(t=>(mu.posterior[t]||0)-C.rf),marker:{color:P.pos}},
+  {type:'scatter',mode:'markers',name:'view q',x:tk,y:tk.map(t=>mu.views_by_name&&mu.views_by_name[t]!=null?mu.views_by_name[t]:null),marker:{size:9,symbol:'diamond',color:P.series[1],line:{width:2,color:P.surface}},hovertemplate:'%{x} view %{y:.1%}<extra></extra>'}],
+  {barmode:'group',yaxis:{tickformat:'.0%',title:'expected excess return'},showlegend:true,margin:{l:56,r:10,t:30,b:50}});
+ // ---- weights
+ const arms=['bl_meanvariance','prior_meanvariance','production_grinold','equal_weight'];
+ $('#w-note').textContent='mean-variance arms consume E[r]; risk parity does not';
+ plot('p-w',arms.map((a,i)=>({type:'bar',name:nm(a),x:tk,y:tk.map(t=>(C.weights[a]||{})[t]||0),marker:{color:i===0?P.pos:i===1?P.gray:P.series[i+1]}})),
+  {barmode:'group',yaxis:{tickformat:'.0%'},showlegend:true,margin:{l:48,r:10,t:30,b:50}});
+ // ---- ex-ante table
+ const rows=Object.entries(C.table).map(([k,v])=>({name:nm(k),...v}));
+ sortable('cmp',rows,r=>`<tr${r.name===nm('bl_meanvariance')?' style="font-weight:600"':''}><td class="t">${esc(r.name)}</td><td class="num">${fmt.pct(r.exp_return_bl)}</td><td class="num">${fmt.pct(r.vol)}</td><td class="num">${fmt.num(r.sharpe_bl,3)}</td><td class="num">${fmt.pct(r.max_weight)}</td><td class="num">${fmt.num(r.effective_n,1)}</td><td class="num">${fmt.pct(r.max_segment_weight)}</td><td class="num">${fmt.pct(r.turnover_vs_production)}</td></tr>`,'exp_return_bl',true);
+ // ---- ablation & tau
+ const ab=(D.sensitivity||{}).ablation||[];
+ plot('p-abl',[{type:'bar',orientation:'h',x:ab.map(r=>r.turnover_vs_prior_only),y:ab.map(r=>r.sources),marker:{color:P.pos},text:ab.map(r=>r.n_views+' views'),textposition:'outside',textfont:{color:P.muted,size:10},hovertemplate:'%{y}<br>turnover vs prior %{x:.1%}<extra></extra>',cliponaxis:false}],
+  {xaxis:{tickformat:'.0%',title:'turnover vs prior-only'},yaxis:{automargin:true,tickfont:{size:10}},margin:{l:10,r:60,t:10,b:40}});
+ const ts=(D.sensitivity||{}).tau||[];
+ plot('p-tau',[{type:'scatter',mode:'lines+markers',x:ts.map(r=>r.tau),y:ts.map(r=>r.turnover_vs_lowest_tau),name:'turnover',line:{color:P.pos,width:2}},
+  {type:'scatter',mode:'lines+markers',x:ts.map(r=>r.tau),y:ts.map(r=>r.mean_abs_tilt_bps/1e4),name:'mean |tilt|',yaxis:'y2',line:{color:P.series[1],width:2,dash:'dot'}}],
+  {xaxis:{type:'log',title:'tau'},yaxis:{tickformat:'.0%',title:'turnover vs tau=0.01'},yaxis2:{overlaying:'y',side:'right',tickformat:'.0%',title:'mean |tilt|',showgrid:false},showlegend:true,margin:{l:52,r:52,t:30,b:40}});
+ // ---- views
+ const pv=D.provenance||{};
+ $('#prov tbody').innerHTML=Object.entries(pv).map(([k,v])=>{const active=(C.sources||[]).includes(k);
+  return `<tr${active?'':' style="opacity:.5"'}><td class="t">${esc(v.label)}${active?'':' <span class="small">(off)</span>'}</td><td>${esc(v.kind)}</td><td><code>${esc(v.field)}</code></td><td class="small" data-no-i18n>${esc(v.origin)}<br><span style="color:var(--muted)">inputs: ${esc(v.inputs)}</span></td><td class="small" data-no-i18n>${esc(v.q)}</td><td class="small" data-no-i18n>${esc(v.confidence)}</td><td class="small" data-no-i18n>${esc(v.caveat)}</td></tr>`;}).join('');
+ const vt=C.view_table||[];$('#v-note').textContent=t("{count} views · impact = total absolute posterior shift across all names",{count:vt.length});
+ sortable('views',vt,v=>`<tr><td class="t">${esc(v.view)}</td><td>${esc(v.source)}</td><td class="num ${cls(v.q)}">${fmt.pct(v.q)}</td><td class="num">${fmt.num(v.confidence,2)}</td><td class="num">${fmt.pct(v.prior_view_return)}</td><td class="num ${cls(v.surprise)}">${fmt.pct(v.surprise)}</td><td class="num">${fmt.num(v.abs_impact_bps,0)}</td><td class="vw" data-no-i18n title="${esc(v.detail)}">${esc(v.detail)}</td></tr>`,'abs_impact_bps',true);
+ $('#method').innerHTML=`<span class="eq">π = δ · Σ · w_mkt</span> <span class="eq">μ̄ = π + τΣPᵗ(PτΣPᵗ + Ω)⁻¹(q − Pπ)</span> <span class="eq">Σ̄ = Σ + M</span><br>
+  He-Litterman closed form, solved with <code>np.linalg.solve</code>. Ω = diag(PτΣPᵗ)/confidence (Idzorek scaling), under which <b>τ cancels exactly</b> - confidence is the only dial, which is why the τ sweep above switches to a τ-independent Ω. δ is calibrated so the cap-weighted basket's equilibrium excess return equals β·ERP; left at the config's 2.5 it implies 13-28% excess returns for these 40-50% vol names and the prior swamps every view. Covariance is Ledoit-Wolf shrunk; the optimiser uses the <b>posterior</b> covariance Σ̄. Views: fair-value upside (annualised over the view horizon, confidence from method count and dispersion), live event score (deliberately small and low-confidence - no validated forward IC yet), consensus targets, and relative within-segment ranking views. Research tooling, not investment advice.`;
+ }
+async function pstat(){try{const s=await j('/api/research/bl/status');if(s.running){$('#run-msg').textContent=t('running…');setTimeout(pstat,4000);}else if(s.returncode!=null){$('#run-msg').textContent=s.returncode===0?t('last run ok'):t('last run failed ({code})',{code:s.returncode});}}catch(e){}}
+async function run(skip){$('#run-msg').textContent=t('starting…');try{const r=await j('/api/research/bl/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({skip_walk_forward:!!skip})});$('#run-msg').textContent=r.started?t('running…'):t('already running');setTimeout(()=>pstat(),2000);setTimeout(()=>load(),skip?25000:130000);}catch(e){$('#run-msg').textContent=t('failed');}}
+$('#btn-run').addEventListener('click',()=>run(false));$('#btn-run-fast').addEventListener('click',()=>run(true));
+document.addEventListener('themechange',()=>{if(D)load();});
+document.addEventListener('languagechange',()=>{if(D)renderBL();});
+load().catch(e=>{$('#verdict').innerHTML='<div class="empty">'+esc(t('load failed: {message}',{message:e.message}))+'</div>';});
+</script></body></html>

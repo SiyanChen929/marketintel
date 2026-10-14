@@ -1,0 +1,333 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Market Intel · Portfolio · 风险分析</title>
+<link rel="stylesheet" href="/static/base.css"><script src="/static/base.js"></script><script src="/static/risk-review.js?v=20260904-2"></script>
+<style>
+body.risk-page .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-top:10px}body.risk-page .tile{border:1px solid var(--border);border-radius:8px;padding:8px 10px;min-width:0}body.risk-page .tile .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}body.risk-page .tile .v{font-size:18px;font-weight:650;font-variant-numeric:tabular-nums}body.risk-page .tile .d{font-size:12px;color:var(--ink2);overflow-wrap:anywhere}
+body.risk-page .checks{display:grid;gap:6px;margin:0;padding:0;list-style:none}body.risk-page .checks li{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:start;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12.5px;min-width:0}body.risk-page .checks .nm{font-weight:600}body.risk-page .checks .dt{color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+body.risk-page .na{color:var(--muted);font-style:italic;white-space:normal}body.risk-page td.wrap{white-space:normal;min-width:220px}body.risk-page th .lc{text-transform:none}
+body.risk-page .mcards{display:none;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}body.risk-page .mcards .card .cm span{text-align:left;overflow-wrap:anywhere}
+body.risk-page .risk-scope{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;padding:6px 10px}body.risk-page .risk-scope details{margin-left:auto}body.risk-page .risk-scope details[open]{flex:1 1 100%;margin-left:0}body.risk-page .risk-scope p{margin:4px 0 0}
+body.risk-page #pc-panel{min-width:0}body.risk-page #pc-panel>.head{margin-bottom:2px}body.risk-page #pc-panel .rmx-ctl{margin-top:2px}body.risk-page #pc-panel .rmx-core-actions{display:flex;justify-content:flex-end;margin:-34px 0 6px;position:relative}body.risk-page #pc-panel .rmx-core-shell{min-width:0}body.risk-page #pc-panel .rmx-core-table-wrap{max-height:390px;overflow:auto;border:1px solid var(--border);border-radius:7px}body.risk-page #pc-panel .rmx-core-tbl{width:100%;min-width:0;table-layout:fixed}body.risk-page #pc-panel .rmx-core-tbl thead th{position:sticky;top:0;z-index:2;background:var(--surface)}body.risk-page #pc-panel .rmx-core-tbl th:nth-child(1){width:23%}body.risk-page #pc-panel .rmx-core-tbl th:nth-child(2){width:17%}body.risk-page #pc-panel .rmx-core-tbl th:nth-child(n+3):nth-child(-n+6){width:15%}body.risk-page #pc-panel .rmx-core-tbl th,body.risk-page #pc-panel .rmx-core-tbl td{white-space:normal;overflow-wrap:anywhere;padding:6px 7px}body.risk-page #pc-panel .rmx-extra{display:none}body.risk-page #pc-panel .rmx-full .rmx-extra{display:table-cell}body.risk-page #pc-panel .rmx-full .rmx-core-tbl{min-width:1180px;table-layout:auto}body.risk-page #pc-panel .rmx-full .rmx-core-tbl th{width:auto}body.risk-page #pc-panel .rmx-inline-flags{display:block;margin-top:3px}body.risk-page #pc-panel .rmx-inline-flags .badge{margin:1px 2px 0 0}body.risk-page #pc-panel .rmx-cards{display:none}body.risk-page #pc-panel .rmx-foot{margin-top:5px}body.risk-page #pc-panel .rmx-foot p{margin:4px 0 0}body.risk-page .risk-disclosure{margin-top:8px;border-top:1px solid var(--grid);padding-top:4px}body.risk-page .risk-disclosure>.note{margin-top:4px}body.risk-page .aux-detail{margin-top:4px;border-top:1px solid var(--grid);padding-top:3px}body.risk-page .aux-detail>summary{justify-content:flex-end;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em}body.risk-page .aux-detail[open]>summary{margin-bottom:8px}body.risk-page .risk-diagnostics{grid-column:1/-1;margin:2px 0 -2px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}body.risk-page .diag-panel{padding:0}body.risk-page .diag-panel>details>summary{padding:10px 12px;color:var(--ink)}body.risk-page .diag-panel>details>summary h2{display:inline;margin:0;font-size:14px;font-weight:650;text-transform:none;letter-spacing:0}body.risk-page .diag-panel>details>summary::after{content:var(--risk-open,'Open');margin-left:auto;font-size:11px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.05em}body.risk-page .diag-panel>details[open]>summary::after{content:var(--risk-close,'Close')}body.risk-page .diag-body{padding:0 12px 12px;border-top:1px solid var(--grid)}
+@media(max-width:760px){body.risk-page .mcards{display:grid}body.risk-page .tblwrap.mcardable{display:none}}
+@media(max-width:760px){body.risk-page header.top{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto auto;gap:4px 8px}body.risk-page header.top h1{grid-column:1;grid-row:1}body.risk-page header.top nav.tabs{grid-column:2;grid-row:1;width:100%;flex:none}body.risk-page header.top>#btn-theme{grid-column:3;grid-row:1;margin-left:0}body.risk-page header.top .hdr{grid-column:1/-1;grid-row:2;width:100%;margin-left:0}}
+@media(max-width:700px){body.risk-page{overflow-x:hidden}body.risk-page main.g2{grid-template-columns:minmax(0,1fr)}body.risk-page main>*{min-width:0}body.risk-page .risk-scope{align-items:flex-start}body.risk-page .risk-scope details{flex:1 1 100%;margin-left:0}body.risk-page #pc-panel .rmx-ctl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}body.risk-page #pc-panel .rmx-field{width:auto}body.risk-page #pc-panel .rmx-field:last-child{grid-column:1/-1}body.risk-page #pc-panel .rmx-core-actions{margin:0 0 7px}body.risk-page #pc-panel .rmx-detail-toggle{display:none}body.risk-page #pc-panel .rmx-core-table-wrap{display:none}body.risk-page #pc-panel .rmx-cards{display:grid;grid-template-columns:1fr;gap:8px}body.risk-page #pc-panel .rmx-card{border:1px solid var(--border);border-radius:8px;padding:9px 10px;background:var(--surface);min-width:0}body.risk-page #pc-panel .rmx-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}body.risk-page #pc-panel .rmx-card-head>b{min-width:0;overflow-wrap:anywhere}body.risk-page #pc-panel .rmx-card-flags{margin-top:4px}body.risk-page #pc-panel .rmx-card dl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;margin:8px 0 0;font-size:12px}body.risk-page #pc-panel .rmx-card dt{color:var(--muted)}body.risk-page #pc-panel .rmx-card dd{margin:0;text-align:right;font-variant-numeric:tabular-nums;max-width:190px;overflow-wrap:anywhere}body.risk-page #var-panel .tblwrap{overflow-x:auto}body.risk-page .diag-panel{grid-column:1/-1}}
+html[data-language="zh"]{--risk-open:"展开";--risk-close:"收起"}html[data-language="ja"]{--risk-open:"開く";--risk-close:"閉じる"}
+@media(max-width:760px){body.risk-page header.top .language-control{grid-column:1/-1;justify-self:end}}
+</style><link rel="stylesheet" href="/static/risk-review.css?v=20260904-2"></head>
+<body class="risk-page">
+<header class="top"><h1>Market Intel</h1><span class="sub">portfolio · 风险分析</span><nav class="tabs" id="nav"></nav><div class="chips hdr" id="hdr"></div><button type="button" class="chip btn" id="btn-theme" aria-pressed="false" aria-label="Switch theme">◐</button></header>
+<nav class="subtabs" id="subnav"></nav>
+<main class="g2">
+ <div id="banner" style="grid-column:1/-1"></div>
+ <section class="panel wide" id="review-panel" aria-labelledby="review-title">
+  <div class="head"><div><div class="review-eyebrow">INVESTMENT RESEARCH</div><h2 id="review-title">风险分析 · Risk review</h2></div><button type="button" class="chip btn" id="review-export" disabled>Export review snapshot</button></div>
+  <p class="takeaway" id="review-context" role="status">Loading the canonical target book and construction evidence…</p>
+  <div class="review-kpis" id="review-kpis"></div>
+  <details id="evidence-review"><summary>Review findings &amp; data evidence <span id="review-count"></span></summary><ul id="review-findings" class="review-findings"></ul><dl id="review-lineage" class="review-lineage"></dl></details>
+ </section>
+ <div class="note risk-scope" id="scope" style="grid-column:1/-1" role="note"><b>No live position ledger.</b><span>benchmark = <span id="scope-bm">loading…</span> · Research only.</span><details><summary>Scope</summary><p>Executable target weights of the canonical run. Current positions, trade deltas, days-to-liquidate and cost impact cannot be computed. No trade instructions.</p></details></div>
+ <section class="panel wide" id="pc-panel"><div class="head"><h2>Risk by construction</h2>
+  <span class="small">same snapshot · compare within one layer</span></div>
+  <div class="review-controls"><label>Selected construction <select id="pc-choice" aria-label="Selected construction" disabled><option>Loading…</option></select></label><label>Order <select id="pc-sort" aria-label="Construction order"><option value="published">Published order</option><option value="var">10D VaR · highest first</option><option value="es">10D ES · highest first</option><option value="te">Tracking error · highest first</option><option value="name">Construction name</option></select></label><a class="chip btn" href="#var-panel">Selected risk ↓</a></div>
+  <p class="small" id="risk-navigation-note" hidden></p><div id="riskmx"></div>
+  <details class="risk-disclosure"><summary>Methodology &amp; lineage</summary><div class="note">Each construction is computed <b>independently</b> and reported in <b>three layers</b>:
+   <b>model</b> = fully-invested target weights; <b>common-vol-target scenario</b> = the same book <i>recalculated here</i> against its own
+   ex-ante volatility (a hypothetical, not a book any run executed); <b>actual landed run book</b> = the weights the run really published,
+   read from run.json and available only for the run's own executable column.
+   A window a book cannot support is reported unavailable with the limiting holding named — never shortened, never zero.
+   <code>data_snapshot_hash</code> identifies the shared market data and is identical across constructions;
+   <code>portfolio_weights_hash</code> is what differs. No route is published as preferred.</div></details>
+  <details class="risk-disclosure" id="pc-detail-wrap"><summary>Selected construction details</summary><div id="pc-detail" class="kpis"></div></details></section>
+ <section class="panel wide" id="var-panel"><div class="head"><h2>VaR &amp; Expected Shortfall</h2><div class="periodbar" id="var-windows"></div></div>
+  <div class="selection-scope" id="var-selection" role="status">Select a construction above.</div>
+  <div class="small" id="var-win" style="margin-bottom:6px"></div><div class="kpis" id="var-kpis"></div>
+  <div class="tblwrap" style="margin-top:10px"><table id="var-h10"><thead><tr><th>10-day route</th><th class="num">VaR 99%</th><th class="num">ES 97.5%</th><th class="num">Obs</th><th>Basis</th></tr></thead><tbody></tbody></table></div>
+  <div class="note" id="var-h10-note" style="margin:6px 0"></div>
+  <div class="tblwrap" style="margin-top:10px"><table id="var-tbl"><thead><tr><th>Tracking error vs</th><th>Benchmark source</th><th class="num">TE (ann.)</th><th class="num">Days</th><th>Window</th></tr></thead><tbody></tbody></table></div>
+  <div class="note" id="var-note" data-no-i18n style="margin-top:10px"></div></section>
+ <div class="canonical-divider" id="canonical-scope" role="note"><b>Canonical target book diagnostics</b><span id="canonical-book">Loading…</span><span>Stress, betas, events, liquidity and constraints below always refer to the published target book.</span></div>
+ <section class="panel wide" id="stress-panel"><div class="head"><h2>Stress P&amp;L</h2><span class="small">P&amp;L as % of NAV · executable target weights · cash unshocked</span></div><p class="takeaway" id="stress-tk"></p><details class="aux-detail"><summary>View scenarios</summary>
+  <div class="tblwrap mcardable"><table id="stress"><caption class="sr-only">Stress scenarios: shock, P&amp;L as a percentage of NAV, basis</caption><thead><tr><th scope="col">Scenario</th><th scope="col" class="num">Shock</th><th scope="col" class="num">P&amp;L (% NAV)</th><th scope="col" class="num">Portfolio <span class="lc">β</span></th><th scope="col" class="num">Coverage</th><th scope="col">Largest contributors</th><th scope="col">Basis</th></tr></thead><tbody></tbody></table></div><div class="mcards" id="stress-cards" role="list"></div></details></section>
+ <section class="panel" id="beta-panel"><div class="head"><h2>Realised betas</h2><span class="small" id="beta-note"></span></div><details class="aux-detail"><summary>View name-level betas</summary><div class="tblwrap"><table id="beta"><caption class="sr-only">Realised betas per target name versus SOXX and SPY</caption><thead><tr><th data-k="ticker">Ticker</th><th class="num" data-k="weight" title="executable target weight">Target w</th><th class="num" data-k="soxx"><span class="lc">β</span> SOXX</th><th class="num" data-k="spy"><span class="lc">β</span> SPY</th><th class="num" data-k="wsoxx" title="weight × β SOXX: contribution to portfolio beta"><span class="lc">w·β</span> SOXX</th><th class="num" data-k="wspy" title="weight × β SPY: contribution to portfolio beta"><span class="lc">w·β</span> SPY</th></tr></thead><tbody></tbody></table></div></details></section>
+ <section class="panel" id="evc-panel"><div class="head"><h2>Event concentration</h2><span class="small" id="evc-note"></span></div><details class="aux-detail"><summary>View event detail</summary><div class="kpis" id="evc-kpis"></div><div class="tblwrap" style="margin-top:10px"><table id="evc"><caption class="sr-only">Target names reporting within the window</caption><thead><tr><th scope="col">Ticker</th><th scope="col">Next earnings</th><th scope="col" class="num">Days ahead</th><th scope="col" class="num">Target w</th></tr></thead><tbody></tbody></table></div><div class="small" id="evc-nodate" style="margin-top:6px"></div></details></section>
+ <section class="panel wide" id="liq-panel"><div class="head"><h2>Liquidity</h2><span class="small" id="liq-note"></span></div><details class="aux-detail"><summary>View name-level liquidity</summary><p class="takeaway" id="liq-tk"></p>
+  <div class="tblwrap"><table id="liq"><caption class="sr-only">Liquidity per target name: ADV where available; days-to-liquidate and cost impact not computable without a NAV</caption><thead><tr><th data-k="ticker">Ticker</th><th class="num" data-k="weight">Target w</th><th class="num" data-k="market_cap">Mkt cap</th><th class="num" data-k="adv_20d_shares">ADV 20d (sh)</th><th class="num" data-k="adv_20d_usd">ADV 20d ($)</th><th class="num" data-k="position_usd">Position $</th><th class="num" data-k="days_to_liquidate">Days to liquidate</th><th class="num" data-k="cost_impact_bps">Cost impact</th></tr></thead><tbody></tbody></table></div></details></section>
+ <section class="panel wide" id="cvt-panel"><div class="head"><h2>Current vs target</h2><span class="small" id="cvt-note" data-no-i18n></span></div><details class="aux-detail"><summary>View unavailable ledger detail</summary>
+  <div class="tblwrap"><table id="cvt"><caption class="sr-only">Current live weight (no ledger) versus executable and model target weights</caption><thead><tr><th data-k="ticker">Ticker</th><th class="num" data-k="current_live_weight">Current live w</th><th class="num" data-k="target_executable_weight" title="canonical executable target weight = model weight × vol-target scale">Target executable w</th><th class="num" data-k="target_model_weight" title="fully-invested model weight of the primary construction">Target model w</th><th class="num" data-k="delta">Δ</th><th>Trade</th></tr></thead><tbody></tbody></table></div></details></section>
+ <section class="panel wide" id="comp-panel"><div class="head"><h2>Compliance · target constraints</h2><span class="small" id="comp-sum"></span></div><p class="takeaway">Portfolio construction checks only. Trade approval, restrictions and execution readiness are unassessed.</p><details class="aux-detail"><summary>View checks</summary><ul class="checks" id="checks"></ul><div class="note" id="comp-basis" style="margin-top:10px"></div></details></section>
+ <h2 class="risk-diagnostics">Portfolio diagnostics</h2>
+ <section class="panel wide diag-panel" id="w-panel"><details id="w-detail"><summary><h2>Weights &amp; reconciliation</h2></summary><div class="diag-body"><div class="head"><span class="small" id="w-note" data-no-i18n></span></div><div class="kpis" id="w-kpis"></div><div id="p-w" class="plot" style="margin-top:10px"></div></div></details></section>
+ <section class="panel diag-panel" id="act-panel"><details id="act-detail"><summary><h2>Active weights vs benchmark</h2></summary><div class="diag-body"><div class="head"><span class="small" id="act-note" data-no-i18n></span></div><div id="p-act" class="plot tall"></div></div></details></section>
+ <section class="panel diag-panel" id="exp-panel"><details id="exp-detail"><summary><h2>Exposures</h2></summary><div class="diag-body"><div class="head"><label class="small">Dimension <select id="exp-dim" aria-label="Exposure dimension"><option value="segment">segment</option><option value="country">country</option><option value="currency">currency</option></select></label></div><div id="p-exp" class="plot tall"></div><div class="tiles" id="exp-flags"></div></div></details></section>
+ <section class="panel wide diag-panel" id="gn-panel"><details id="gn-detail"><summary><h2>Gross / net / leverage</h2></summary><div class="diag-body"><div class="kpis" id="gn-kpis"></div><div class="note" id="gn-note" data-no-i18n style="margin-top:10px"></div></div></details></section>
+</main>
+<script>
+renderNav('/risk');themeInit();let R=null,lastOk=null;
+const PANELS=['#var-panel','#stress-panel','#beta-panel','#evc-panel','#liq-panel','#cvt-panel','#comp-panel'];
+const DIMS=['segment','country','currency'];
+const DIAGNOSTICS={
+ 'w-detail':{panel:'#w-panel',render:()=>renderWeights(),redraw:()=>drawWeights()},
+ 'act-detail':{panel:'#act-panel',render:()=>drawActive(),redraw:()=>drawActive()},
+ 'exp-detail':{panel:'#exp-panel',render:()=>drawExposures(),redraw:()=>drawExposures()},
+ 'gn-detail':{panel:'#gn-panel',render:()=>renderGN()}
+};
+const diagReady=new Set();
+// W6: the exposure dimension is mirrored in ?dim= (read on load, replaceState on change)
+(function(){const d=qs().get('dim');if(DIMS.includes(d))$('#exp-dim').value=d;})();
+const sgn=(v,d=1)=>v==null||isNaN(v)?'–':(v>0?'+':v<0?'−':'')+(Math.abs(v)*100).toFixed(d)+'%';
+const kpi=([l,v,d,c])=>`<div class="kpi"><div class="l">${esc(t(l))}</div><div class="v${c?' '+c:''}">${v||'–'}</div><div class="d">${d||''}</div></div>`;
+const card=(title,sub,metrics)=>`<div class="card" role="listitem"><div class="ct"><b>${esc(title)}</b><span class="cs">${sub||''}</span></div><div class="cm">${metrics.map(([l,v])=>`<b>${esc(t(l))}</b><span>${v}</span>`).join('')}</div></div>`;
+const NA_NAV='not computable — no NAV';const NA_VOL='not computable — no volume';const NA_BOTH='not computable — no volume/NAV';
+const shares=v=>v==null||isNaN(v)?'':Math.abs(v)>=1e6?fmt.big(v):Math.abs(v)>=1e3?(v/1e3).toFixed(0)+'K':String(Math.round(v));
+function hdr(stale){const w=R&&R.weights,confirmed=R?.var?.provenance?.asof_last_confirmed_close;
+ $('#hdr').innerHTML=runChip(R&&R.run)+asOfChip(confirmed,lastOk,stale).replaceAll('data as-of','risk close').replace('risk close: pipeline session the data belongs to · refreshed: last successful fetch by this page','risk close: last confirmed close in this snapshot · refreshed: page fetch time, not a vendor update')+(w&&w.n_names?`<span class="chip">${esc(t('{count} target names · cash {cash}',{count:w.n_names,cash:fmt.pct(w.cash)}))}</span>`:'')+`<button type="button" class="chip btn" id="btn-refresh" aria-label="Refresh risk workbench data">↻ Refresh</button>`;
+ $('#btn-refresh').addEventListener('click',load);}
+let reviewSequence=0;
+async function load(){const sequence=++reviewSequence;document.body.dataset.reviewState='loading';
+ $('#review-context').textContent='Loading both snapshots. All risk sections refresh together.';$('#review-export').disabled=true;
+ $('#review-kpis').innerHTML='';$('#review-findings').innerHTML='';$('#review-lineage').innerHTML='';$('#review-count').textContent='';
+ PANELS.forEach(p=>setPanel(p,'loading'));diagReady.clear();announce('Loading risk workbench');
+ _RMXreq.forEach(c=>c.abort());_RMXreq.clear();_RMXci.clear();_RMX=null;
+ const results=await Promise.allSettled([fetchJSON('/api/research/risk','risk'),fetchJSON('/api/research/risk/constructions?reps=0','risk-constructions')]);
+ if(sequence!==reviewSequence)return;
+ const failed=results.find(r=>r.status==='rejected');
+ if(failed){R=null;PC=null;document.body.dataset.reviewState='error';hdr(true);
+  $('#review-context').textContent=t("Review unavailable: {message}. Refresh to retry; previous figures are withheld.",{message:failed.reason.message});
+  setPanel('#review-panel','error','Complete snapshot could not be loaded',load);return;}
+ R=results[0].value;PC=results[1].value;lastOk=new Date();hdr();
+ const mismatch=RiskReview.mismatch(R,PC);
+ if(mismatch){document.body.dataset.reviewState='mismatch';$('#review-context').textContent=mismatch;setPanel('#review-panel','error',mismatch,load);return;}
+ document.body.dataset.reviewState='ready';setPanel('#review-panel','fresh');
+ $('#banner').innerHTML=statusBanner(R.run);scope();renderReview();
+ await loadMatrix();if(sequence!==reviewSequence)return;
+ if(!R.weights||!R.weights.n_names){PANELS.forEach(p=>setPanel(p,'empty','no target list in the canonical run; run the pipeline from the Research page'));announce('Risk workbench: no target list');return;}
+ PANELS.forEach(p=>setPanel(p,'fresh'));render();renderOpenDiagnostics();announce('Risk workbench loaded');}
+function scope(){const b=R.benchmark||{};$('#scope-bm').innerHTML=`<b>${esc(b.name||'unknown')}</b>${b.n?` (${b.n} constituents${b.custom?', custom file':''})`:''}${b.note?` · ${esc(b.note)}`:''}`;}
+function renderReview(){
+ const w=R.weights||{},v=R.var||{},p=v.provenance||{},fin=v.session_index?.finality||{},c=RiskReview.checks(R.compliance);
+ const findings=RiskReview.findings(R,PC),blocks=findings.filter(f=>f.level==='block').length;
+ const confirmed=p.asof_last_confirmed_close||fin.confirmed_through;
+ const gaps=Object.keys(R.run?.data_health?.price_gaps||{});
+ $('#review-context').textContent=t("{construction} target book · {count} names · {blocks} blocking findings · {gaps} evidence gaps. {note}",{construction:w.construction||t('Canonical'),count:w.n_names||0,blocks,gaps:findings.length-blocks,note:gaps.length?t('{count} names have recent price gaps.',{count:gaps.length}):t('Review the evidence before using these estimates.')});
+ $('#canonical-book').textContent=t("{construction} · {invested} invested · {cash} cash",{construction:w.construction||t('unknown'),invested:fmt.pct(w.invested),cash:fmt.pct(w.cash)});
+ $('#review-kpis').innerHTML=[
+  ['Confirmed risk close',esc(confirmed||'Unknown'),t("run session {session} · {schema}",{session:esc(R.run?.asof_session||'unknown'),schema:esc(v.schema_version||'unknown method')})],
+  ['Target allocation',t('{invested} invested',{invested:fmt.pct(w.invested)}),t('{cash} cash · {status}',{cash:fmt.pct(w.cash),status:w.reconciles===true?t('weights reconcile'):t('reconciliation unconfirmed')})],
+  ['Target constraints',t('{pass} / {total} pass',{pass:c.passed,total:c.total}),t('{failed} failed · {unknown} unknown · no trade approval',{failed:c.failed,unknown:c.unknown})],
+  ['Mandate benchmark',PC?.benchmark?.is_formal_mandate===true?'Defined':'Not defined','TE proxies remain research comparisons']
+ ].map(kpi).join('');
+ $('#review-count').textContent=t(' · {count} findings',{count:findings.length});
+ $('#review-findings').innerHTML=findings.map(f=>`<li><span class="${f.level==='block'?'block':'small'}">${f.level==='block'?'BLOCKING':'EVIDENCE GAP'}</span><strong>${esc(f.title)}</strong><p>${esc(f.detail)}</p><a href="#${f.target}">Inspect evidence →</a></li>`).join('');
+ const evidence=[['Run',R.run?.run_id],['Research status',R.run?.validation_status||'NOT VALIDATED'],['Confirmed close',confirmed||'unknown'],['Last source bar',R.asof_prices],['Acquired at',fin.acquired_at||v.acquisition?.acquired_at||'unknown'],['Loaded in this page',lastOk?.toISOString()],['Finality',p.reconciliation||fin.note||'unverified'],['Data hash',p.data_snapshot_hash||'unavailable'],['Calculator hash',p.calculator_code_hash||'unavailable'],['Target weight hash',p.portfolio_weights_hash||'unavailable'],['Calendar',v.session_index?.source||'unknown']];
+ $('#review-lineage').innerHTML=evidence.map(([k,val])=>`<dt>${esc(k)}</dt><dd>${esc(val||'unknown')}</dd>`).join('');
+ $('#review-export').disabled=false;
+}
+$('#review-export').addEventListener('click',()=>{
+ if(document.body.dataset.reviewState!=='ready'||RiskReview.mismatch(R,PC))return;
+ const snapshot={schema:'risk-review-export.v1',exported_at:new Date().toISOString(),research_status:'NOT VALIDATED',
+  selection:{construction:PCNAME,...PCSEL},findings:RiskReview.findings(R,PC),selected_interval:rmxCIState(PCNAME,PCSEL.layer,PCSEL.win),
+  canonical_book:R,construction_snapshot:PC,scope:'Research diagnostics; no trade approval or live position ledger.'};
+ const url=URL.createObjectURL(new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'}));
+ const a=document.createElement('a');a.href=url;a.download='risk-review-'+String(R.run?.run_id||'snapshot').replace(/[^a-zA-Z0-9_-]/g,'_')+'.json';a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);announce('Review snapshot exported with selection, findings and data lineage');});
+function render(){renderVar();renderStress();renderBetas();renderEvents();renderLiq();renderCvt();renderCompliance();}
+function ensureDiagnostic(id){const cfg=DIAGNOSTICS[id],det=document.getElementById(id);if(!cfg||!det||!det.open||!R||!R.weights||!R.weights.n_names)return;
+ if(!diagReady.has(id)){cfg.render();diagReady.add(id);setPanel(cfg.panel,'fresh');}
+ else if(cfg.redraw)cfg.redraw();}
+function renderOpenDiagnostics(){Object.keys(DIAGNOSTICS).forEach(ensureDiagnostic);}
+function bindDiagnostics(){Object.keys(DIAGNOSTICS).forEach(id=>{const det=document.getElementById(id);if(!det)return;det.addEventListener('toggle',()=>{if(det.open)requestAnimationFrame(()=>ensureDiagnostic(id));});});}
+// redraw-only path (theme change): charts from the cached payload; selection and scroll are untouched
+function redraw(){if(!R||!R.weights||!R.weights.n_names)return;Object.entries(DIAGNOSTICS).forEach(([id,cfg])=>{const det=document.getElementById(id);if(det&&det.open&&diagReady.has(id)&&cfg.redraw)cfg.redraw();});}
+// ---------- (a) weights & reconciliation
+function renderWeights(){const w=R.weights,b=R.benchmark||{},as=R.active_summary||{};const tot=(w.invested||0)+(w.cash||0);const ok=w.reconciles===true;
+ $('#w-kpis').innerHTML=[['Invested (executable)',fmt.pct(w.invested),t("{count} names · vol-target scale {scale}",{count:w.n_names,scale:fmt.num(w.scale,3)})],['Cash',fmt.pct(w.cash),t("remainder after the {target} vol target",{target:fmt.pct(w.vol_target,0)})],['Targets + cash',fmt.pct(tot,1)+(ok?' ✓':' ✗'),ok?t('reconciles to 100%'):t('does not reconcile'),ok?'pos':'neg'],['Names',String(w.n_names),t('{construction} construction',{construction:esc(w.construction||'')})],['Benchmark',b.n!=null?t('{count} names',{count:b.n}):'–',esc(b.name||'')],['Active share',fmt.pct(as.active_share_exec),t('executable vs benchmark · model {model}',{model:fmt.pct(as.active_share_model)})]].map(kpi).join('');
+ $('#w-note').textContent=w.basis||'';drawWeights();}
+function drawWeights(){const w=R.weights,bw=(R.benchmark||{}).weights||{},m=w.model||{};const p=pal();const tk=Object.keys(w.executable||{}).sort((a,b)=>(w.executable[b]||0)-(w.executable[a]||0));
+ plot('p-w',[{type:'bar',name:'executable target',x:tk,y:tk.map(t=>w.executable[t]||0),marker:{color:p.pos},hovertemplate:'%{x}: %{y:.2%} executable<extra></extra>'},{type:'bar',name:'model (fully invested)',x:tk,y:tk.map(t=>m[t]||0),marker:{color:p.series[1]},hovertemplate:'%{x}: %{y:.2%} model<extra></extra>'},{type:'bar',name:'benchmark',x:tk,y:tk.map(t=>bw[t]||0),marker:{color:p.gray},hovertemplate:'%{x}: %{y:.2%} benchmark<extra></extra>'}],{barmode:'group',yaxis:{tickformat:'.0%'},showlegend:true,margin:{l:48,r:10,t:30,b:50}});
+ const top=tk[0];chartNote('p-w',top?`${top} carries the largest executable target weight, ${fmt.pct(w.executable[top])} (model ${fmt.pct(m[top])}, benchmark ${fmt.pct(bw[top])}); ${tk.length} names sum to ${fmt.pct(w.invested)} invested plus ${fmt.pct(w.cash)} cash${w.reconciles?' = 100% ✓':' (does not reconcile ✗)'}.`:'No target weights in this run.',['Ticker','Executable target w','Model w','Benchmark w'],tk.map(t=>[t,fmt.pct(w.executable[t],2),fmt.pct(m[t],2),fmt.pct(bw[t],2)]));}
+// ---------- (b) active weights
+function drawActive(){const rows=R.active||[];const as=R.active_summary||{};const p=pal();const tg=rows.filter(r=>r.in_target).sort((a,b)=>a.active-b.active);const un=rows.filter(r=>!r.in_target).sort((a,b)=>a.active-b.active);const worst=un.slice(0,5);const show=[...worst,...tg];
+ plot('p-act',[{type:'bar',orientation:'h',name:'active (executable − benchmark)',y:show.map(r=>r.ticker),x:show.map(r=>r.active),marker:{color:show.map(r=>r.active>=0?p.pos:p.neg)},text:show.map(r=>sgn(r.active)),textposition:'outside',textfont:{size:11,color:p.ink2},cliponaxis:false,hovertemplate:'%{y}: %{text} executable<extra></extra>'},{type:'bar',orientation:'h',name:'active (model − benchmark)',y:show.map(r=>r.ticker),x:show.map(r=>r.active_model),marker:{color:p.gray},hovertemplate:'%{y}: %{x:+.1%} model<extra></extra>'}],{barmode:'group',xaxis:{tickformat:'+.0%'},yaxis:{automargin:true},margin:{l:56,r:56,t:30,b:30},showlegend:true,bargap:.25});
+ const ov=tg.slice().sort((a,b)=>b.active-a.active).slice(0,3);$('#act-note').textContent=as.note||'';
+ chartNote('p-act',ov.length?`Largest overweights vs the benchmark: ${ov.map(r=>r.ticker+' '+sgn(r.active)).join(', ')}; ${as.n_underweight||0} names are underweight (${as.n_benchmark_not_in_target||0} benchmark names are not in the target list${worst.length?'; largest '+worst[0].ticker+' '+sgn(worst[0].active):''}). Active share ${fmt.pct(as.active_share_exec)} with cash counted as active; the chart shows the target names and the five largest underweights, the table every name.`:'No active weights.',['Ticker','Segment','Executable w','Model w','Benchmark w','Active','Active (model)'],rows.map(r=>[r.ticker,r.segment||'',fmt.pct(r.weight,2),fmt.pct(r.model,2),fmt.pct(r.benchmark,2),sgn(r.active,2),sgn(r.active_model,2)]));}
+// ---------- (c) exposures
+function drawExposures(){const ex=R.exposures||{};const dim=$('#exp-dim').value;const rows=(ex[dim]||[]).slice().sort((a,b)=>((b.weight||0)-(a.weight||0))||((b.benchmark||0)-(a.benchmark||0)));const show=rows.slice().reverse();const p=pal();
+ plot('p-exp',[{type:'bar',orientation:'h',name:'executable target',y:show.map(r=>r.name),x:show.map(r=>r.weight),marker:{color:p.pos},hovertemplate:'%{y}: %{x:.1%} executable<extra></extra>'},{type:'bar',orientation:'h',name:'model',y:show.map(r=>r.name),x:show.map(r=>r.model),marker:{color:p.series[1]},hovertemplate:'%{y}: %{x:.1%} model<extra></extra>'},{type:'bar',orientation:'h',name:'benchmark',y:show.map(r=>r.name),x:show.map(r=>r.benchmark),marker:{color:p.gray},hovertemplate:'%{y}: %{x:.1%} benchmark<extra></extra>'}],{barmode:'group',xaxis:{tickformat:'.0%'},yaxis:{automargin:true,tickfont:{size:11}},margin:{l:60,r:16,t:30,b:30},showlegend:true,bargap:.2});
+ const top=rows[0];const big=rows.slice().sort((a,b)=>Math.abs(b.active||0)-Math.abs(a.active||0))[0];const label=dim[0].toUpperCase()+dim.slice(1);
+ chartNote('p-exp',top?`Largest ${dim} exposure: ${top.name} at ${fmt.pct(top.weight)} of NAV (model ${fmt.pct(top.model)}, benchmark ${fmt.pct(top.benchmark)}); biggest active bet ${big.name} ${sgn(big.active)} vs benchmark (model ${sgn(big.active_model)}). Cash (${fmt.pct((R.weights||{}).cash)}) has no ${dim}, so every ${dim} reads underweight against a fully-invested benchmark.`:`No ${dim} exposures.`,[label,'Executable w','Model w','Benchmark w','Active','Active (model)','Target names','Benchmark names'],rows.map(r=>[r.name,fmt.pct(r.weight,2),fmt.pct(r.model,2),fmt.pct(r.benchmark,2),sgn(r.active,2),sgn(r.active_model,2),r.n_target??'',r.n_benchmark??'']));
+ const fl=[ex.adr_share,ex.taiwan_china,ex.ai_capex_dependency].filter(Boolean);
+ $('#exp-flags').innerHTML=fl.map(f=>`<div class="tile"><div class="l">${esc(f.name)}</div><div class="v">${fmt.pct(f.weight)||'0.0%'}</div><div class="d">model ${fmt.pct(f.model)||'0.0%'} · benchmark ${fmt.pct(f.benchmark)||'0.0%'} · active <span class="${cls(f.active)}">${sgn(f.active)}</span><br>${f.tickers&&f.tickers.length?esc(f.tickers.join(', ')):'no target names'}${f.definition?'<br><span class="small">'+esc(f.definition)+'</span>':''}</div></div>`).join('');}
+$('#exp-dim').addEventListener('change',()=>{const d=$('#exp-dim').value;setQS({dim:d==='segment'?'':d});if(R&&R.weights&&R.weights.n_names&&diagReady.has('exp-detail'))drawExposures();});
+// ---------- (d) gross / net / leverage
+function renderGN(){const g=R.gross_net||{};$('#gn-kpis').innerHTML=[['Long',fmt.pct(g.long),'sum of executable target weights'],['Short',fmt.pct(g.short)||'0.0%','long-only mandate'],['Gross',fmt.pct(g.gross),'long + |short|'],['Net',fmt.pct(g.net),'long − short'],['Cash',fmt.pct(g.cash),'vol-target remainder'],['Leverage',g.leverage!=null?fmt.num(g.leverage,2)+'x':'–','gross / NAV']].map(kpi).join('');$('#gn-note').textContent=g.note||'';}
+
+// ---------- per-construction risk (shared component; the same matrix /constructions renders)
+const riskQuery=qs();
+let PC=null,PCNAME=riskQuery.get('method')||'recommended';
+let PCSEL={win:RISK_WINDOWS.some(([k])=>k===riskQuery.get('win'))?riskQuery.get('win'):'1y',
+ layer:RISK_LAYERS.some(([k])=>k===riskQuery.get('layer'))?riskQuery.get('layer'):(PCNAME==='recommended'?'actual_run':'model'),
+ bench:RISK_BENCH.some(([k])=>k===riskQuery.get('bench'))?riskQuery.get('bench'):'te_proxy'};
+let matrixPaint=null;
+async function loadMatrix(){
+ const names=Object.keys(PC?.constructions||{});if(!names.includes(PCNAME))PCNAME=names.includes('recommended')?'recommended':names[0];
+ $('#pc-choice').innerHTML=names.map(n=>`<option value="${esc(n)}" ${n===PCNAME?'selected':''}>${esc(n)}</option>`).join('');$('#pc-choice').disabled=!names.length;
+ await riskMatrix(document.getElementById('riskmx'),{id:'rmx',coreView:true,data:PC,...PCSEL,selectedName:PCNAME,
+  bindRender:f=>{matrixPaint=f;},orderRows:(rows,sel)=>RiskReview.order(rows,sel,$('#pc-sort').value),
+  onchange:s=>{PCSEL={...s};renderSelection();},
+  onpick:(n,s)=>{PCNAME=n;PCSEL={...s};renderSelection();},
+  onci:(n,view)=>{if(n===PCNAME&&view.layer===PCSEL.layer&&view.win===PCSEL.win)renderSelection();}});
+ renderSelection();}
+function renderSelection(){
+ setQS({method:PCNAME,layer:PCSEL.layer,win:PCSEL.win,bench:PCSEL.bench});
+ syncPortfolioLinks({method:PCNAME,...PCSEL,primary:R?.weights?.construction});
+ const navNote=$('#risk-navigation-note');navNote.hidden=PCSEL.layer!=='vol_target_scenario';
+ navNote.textContent='当前为假设的波动率情景。组合总览和调仓历史链接将打开此方法的股票内部权重。';
+ $('#pc-choice').value=PCNAME||'';
+ document.querySelectorAll('#riskmx tr[data-c],#riskmx .rmx-card[data-c]').forEach(e=>e.setAttribute('aria-selected',String(e.dataset.c===PCNAME)));
+ renderPCDetail();renderVar();}
+$('#pc-sort').addEventListener('change',()=>{if(matrixPaint)matrixPaint();renderSelection();});
+$('#pc-choice').addEventListener('change',()=>{
+ const button=Array.from(document.querySelectorAll('#riskmx .rmx-pick')).find(b=>b.dataset.c===$('#pc-choice').value);
+ if(button)button.click();});
+function renderPCDetail(){
+ const host=$('#pc-detail');if(!PC||!PC.available){host.innerHTML='';return;}
+ const n=PCNAME,blk=(PC.constructions||{})[n];if(!blk){host.innerHTML='';return;}
+ const layer=PCSEL.layer,wk=PCSEL.win,bk=PCSEL.bench;
+ const lb=((blk.layers||{})[layer])||{};
+ const layerName=(RISK_LAYERS.find(l=>l[0]===layer)||[])[1]||layer;
+ if(!lb.available){host.innerHTML=`<div class="kpi"><div class="l">${esc(n)} · ${esc(layerName)}</div><div class="v" style="font-size:15px">unavailable</div><div class="d">${esc(lb.reason||'')}</div></div>`;return;}
+ const c=blk.construction||{},w=(lb.windows||{})[wk]||{};
+ const h1=((w.horizons||{})['1']||{}).overlapping||{},h10=(w.horizons||{})['10']||{};
+ const o10=h10.overlapping||{},ph=h10.non_overlapping_phases||{};
+ const p=lb.provenance||{},li=lb.layer||{};
+ // the interval comes from the matrix's per-row official fetch, keyed on this exact construction/layer/window
+ const ci=rmxCIState(n,layer,wk);
+ const cr=(ci&&ci.state==='done'&&ci.row)?ci.row:null;
+ const ciVal=cr?[cr[wk+'_var99_ci_lo'],cr[wk+'_var99_ci_hi']]:[null,null];
+ const f=(x,d=2)=>x==null?'–':fmt.pct(x,d);
+ const te=(w.tracking_error||[]).find(t=>{const b=String(t.benchmark||'');
+   return bk==='te_mandate'?(t.kind==='formal mandate'):bk==='te_index'?b.indexOf('index proxy')>=0:(t.kind==='research proxy'&&b.indexOf('index proxy')<0);})||{};
+ const fin=(lb.session_index||{}).finality||{};
+ if(!w.available){
+  host.innerHTML=`<div class="kpi"><div class="l">${esc(n)} · ${esc(layerName)} · ${esc(wk.toUpperCase())}</div>`+
+   `<div class="v" style="font-size:15px">window unavailable</div><div class="d">${esc(w.reason||'')}</div></div>`+
+   (w.limiting_holding?`<div class="kpi"><div class="l">Limiting holding</div><div class="v">${esc(w.limiting_holding)}</div><div class="d">first bar ${esc(w.limiting_first_bar||'unknown')}</div></div>`:'');
+  return;}
+ host.innerHTML=[
+  ['Construction',esc(n)+(c.is_alias?' (alias of '+esc(c.alias_of)+')':''),`${c.n_names} names · ${esc(layerName)} · ${esc(li.basis||'')}`],
+  ['VaR 99% · 1D',f(h1.var_99),`${h1.n_obs||0} obs · ${w.start||''} → ${w.end||''} · ${h1.n_failed_windows||0} failed windows`],
+  ['ES 97.5% · 1D',f(h1.es_975),`tail ${h1.tail_obs_975||0} obs`],
+  ['VaR 99% · 10D',f(o10.var_99),`overlapping · ${o10.non_overlap_equivalent_count||0} non-overlap-equivalent (count heuristic, not an effective sample size)`],
+  ['ES 97.5% · 10D',f(o10.es_975),`overlapping · ${o10.n_obs||0} windows · ${o10.n_failed_windows||0} failed`],
+  ['10d phases',ph.var_99_range?`${f(ph.var_99_range[0])} – ${f(ph.var_99_range[1])}`:'–',`${ph.n_phases||0} disjoint · ${ph.n_windows_per_phase_range?ph.n_windows_per_phase_range[0]+'–'+ph.n_windows_per_phase_range[1]+' windows each':''} · median ${f(ph.var_99_median)}`],
+  ['Tracking error',te.available?f(te.tracking_error_ann):`<span class="na">${esc(te.status||'unavailable')}</span>`,
+    te.available?`${esc(te.benchmark)} (${esc(te.kind)}) · ${te.n_days} paired sessions in this ${esc(wk.toUpperCase())} window`
+                :esc(te.reason||'no formal mandate benchmark is defined; a research proxy is not a substitute')],
+	  ['VaR99 10D estimate CI',
+	    ci&&ci.state==='pending'?'<span class="rmx-pending">computing…</span>'
+	     :ci&&ci.state==='stale'?'<span class="na">snapshot changed — reload</span>'
+	     :ci&&ci.state==='error'?'<span class="na">failed</span>'
+	     :ci&&ci.state==='unavailable'?'<span class="na">unavailable</span>'
+	     :cr&&ciVal[0]!=null?`${f(ciVal[0])} – ${f(ciVal[1])}`
+	     :'<span class="na">not computed</span>',
+	    ci&&ci.state==='pending'?'official interval is being computed for this row'
+	     :ci&&ci.state==='stale'?('the selected interval was computed against different data ('+esc(ci.error||'')+'); it is withheld rather than shown beside these point estimates')
+	     :ci&&ci.state==='error'?esc(ci.error||'request failed')
+	     :ci&&ci.state==='unavailable'?esc(ci.error||'official interval unavailable for this sample')
+	     :cr&&ciVal[0]!=null
+      ?`${esc(cr[wk+'_ci_confidence']!=null?((cr[wk+'_ci_confidence']*100).toFixed(0)+'% around the ESTIMATE'):'interval around the ESTIMATE')}`
+       +` · ${esc(cr[wk+'_ci_method']||'bootstrap')} · ${esc(String(cr[wk+'_ci_reps']))} reps · block ${esc(String(cr[wk+'_ci_block']))}`
+       +` · <b>${esc(cr[wk+'_ci_tier']||'')}</b> tier`
+      :'select this construction in the matrix above to compute the official interval'],
+  ['Finality',esc(fin.confirmed_through||p.asof_last_confirmed_close||'–'),
+    `confirmed through this close · snapshot acquired ${esc(fin.acquired_at||p.acquired_at||'unknown')} · ${fin.acquired_after_close?'after the bell':'BEFORE the bell, so that session is not a confirmed close'}`],
+  ['Hashes','weights '+String(p.portfolio_weights_hash||'').slice(0,8),
+    `data ${String(p.data_snapshot_hash||'').slice(0,8)} (shared) · calc ${String(p.calculator_code_hash||'').slice(0,8)} · config ${String(blk.config_hash||'').slice(0,8)} · sample ${String(w.calculation_sample_hash||'').slice(0,8)}`]
+ ].map(kpi).join('');}
+
+let varWin=null;
+// ---------- (e) VaR / Expected Shortfall - risk.v2, frozen positions, no preferred estimate
+function renderVar(){
+ const selection=RiskReview.selected(PC,PCSEL,PCNAME);const v=selection.layer||{};varWin=PCSEL.win;
+ const label=(RISK_LAYERS.find(l=>l[0]===PCSEL.layer)||[])[1]||PCSEL.layer;
+ const bk=(RISK_BENCH.find(b=>b[0]===PCSEL.bench)||[])[1]||PCSEL.bench;
+ $('#var-selection').textContent=t("{construction} · {layer} · {window} · cash {cash} · TE: {benchmark}{legacy}",{construction:PCNAME||t('No construction'),layer:t(label),window:varWin.toUpperCase(),cash:v.cash?.weight==null?t('unknown'):fmt.pct(v.cash.weight),benchmark:t(bk),legacy:v.schema_version&&v.schema_version!=='risk.v4'?t(' · {schema} legacy diagnostic',{schema:v.schema_version}):''});
+ const loss=x=>x==null?'–':fmt.pct(x,2);
+ $('#var-win').textContent='';$('#var-h10-note').textContent='';$('#var-windows').textContent='Window follows the matrix selection';
+ setPanel('#var-panel','fresh');
+ $('#var-note').textContent=[v.method,v.sign,(v.missing&&v.missing.length)?'not priced: '+v.missing.join(', '):''].filter(Boolean).join(' · ');
+ if(!v.available){$('#var-kpis').innerHTML='';$('#var-tbl tbody').innerHTML='';$('#var-h10 tbody').innerHTML='';setPanel('#var-panel','empty',selection.reason||'VaR not computable');return;}
+ const wins=v.windows||{};
+ const win=wins[varWin]||{};
+ if(!win.available){
+  $('#var-kpis').innerHTML=`<div class="kpi"><div class="l">${esc(varWin.toUpperCase())}</div><div class="v" style="font-size:15px">unavailable</div><div class="d">${esc(win.reason||'')}</div></div>`;
+  $('#var-tbl tbody').innerHTML='';$('#var-h10 tbody').innerHTML='';
+  const od=(v.observed_window_diagnostic||{}).observed_window||{};
+  $('#var-win').textContent=od.start?`observed-window diagnostic (NOT ${varWin.toUpperCase()}): ${od.start} → ${od.end} · ${od.n_sessions} sessions · limiting holding ${v.limiting_holding||'?'}`:'';
+  return;}
+ const h1=(win.horizons||{})['1']||{},h10=(win.horizons||{})['10']||{};
+ const o1=h1.overlapping||{},o10=h10.overlapping||{},ph=h10.non_overlapping_phases||{},st=h10.sqrt_time_reference||{};
+ const ci=rmxCIState(PCNAME,PCSEL.layer,PCSEL.win);const cr=ci?.state==='done'?ci.row:null;
+ const u=cr?{available:cr[varWin+'_var99_ci_lo']!=null,lo:cr[varWin+'_var99_ci_lo'],hi:cr[varWin+'_var99_ci_hi'],ci:cr[varWin+'_ci_confidence'],block_length:cr[varWin+'_ci_block'],reps:cr[varWin+'_ci_reps']}:{available:false,reason:ci?.state==='pending'?'computing…':ci?.state==='stale'?'snapshot changed — reload':ci?.error||'Select the construction to compute its interval'};
+ $('#var-kpis').innerHTML=[
+  ['VaR 99% · 1-day',loss(o1.var_99),`${o1.n_obs||0} daily obs · ${o1.tail_obs_99||0} in the tail`],
+  ['ES 97.5% · 1-day',loss(o1.es_975),'mean loss beyond the 97.5% quantile'],
+  ['VaR 99% · 10-day',loss(o10.var_99),`overlapping · ${o10.non_overlap_equivalent_count||0} non-overlap-equivalent windows (count heuristic, not an effective sample size)`],
+  ['ES 97.5% · 10-day',loss(o10.es_975),'overlapping'],
+  ['10d phase range',ph.var_99_range?`${loss(ph.var_99_range[0])} – ${loss(ph.var_99_range[1])}`:'–',`${ph.n_phases||0} disjoint phases · median ${loss(ph.var_99_median)}`],
+	  ['Estimate interval',u.available?`${loss(u.lo)} – ${loss(u.hi)}`:'–',u.available?`${(u.ci*100).toFixed(0)}% block bootstrap · block ${u.block_length}, reps ${u.reps}`:esc(u.reason||'not computed for this sample')],
+  ['VaR 95% · 1-day',loss(o1.var_95),'historical 95% loss quantile; future exceedances may differ'],
+  ['Worst / best session',o1.worst_day?`${sgn(o1.worst_day.return)} / ${sgn(o1.best_day.return)}`:'–',o1.worst_day?`${o1.worst_day.date} / ${o1.best_day.date}`:'']].map(kpi).join('');
+ $('#var-h10 tbody').innerHTML=[
+  ['overlapping',o10.var_99,o10.es_975,o10.n_obs,`shares 9 of 10 sessions with its neighbour; ${o10.non_overlap_equivalent_count||0} non-overlap-equiv (heuristic)`],
+  [t('non-overlapping (median of {count} phases)',{count:ph.n_phases||0}),ph.var_99_median,ph.es_975_median,ph.n_windows_per_phase_range?ph.n_windows_per_phase_range.join('–')+' / phase':null,ph.var_99_range?`range ${loss(ph.var_99_range[0])} – ${loss(ph.var_99_range[1])} across phases`:''],
+  ['sqrt-time reference',st.var_99,st.es_975,o1.n_obs,esc(st.assumption||'')]
+ ].map(([n,va,es,nn,note])=>`<tr><td class="t" data-i18n>${esc(t(n))}</td><td class="num" style="font-weight:600">${loss(va)}</td><td class="num">${loss(es)}</td><td class="num">${nn||'–'}</td><td class="small">${note}</td></tr>`).join('');
+ $('#var-h10-note').textContent=`VaR99 tail: ${o10.tail_obs_99??'unknown'} overlapping observations; ${o10.n_failed_windows??'unknown'} failed 10D windows. Phases overlap each other and must not be summed as independent observations. ES97.5 and VaR99 use different confidence levels and are not directly ordered. `+'No preferred estimate is published: the risk policy that would choose between these has not been agreed. '+(v.es_level_note||'');
+	 $('#var-tbl tbody').innerHTML=(win.tracking_error||[]).filter(t=>PCSEL.bench==='te_mandate'?t.kind==='formal mandate':PCSEL.bench==='te_index'?String(t.benchmark).includes('index proxy'):t.kind==='research proxy'&&!String(t.benchmark).includes('index proxy')).map(t=>`<tr><td class="t">${esc(t.benchmark)}</td><td class="small">${esc(t.source||'')}</td><td class="num">${t.available?fmt.pct(t.tracking_error_ann,2):'–'}</td><td class="num">${t.n_days||'–'}</td><td class="small">${t.available?esc(t.start+' → '+t.end):esc(t.reason||'')}</td></tr>`).join('');
+ const cal=v.session_index||{},prov=v.provenance||{};
+ $('#var-win').textContent=`${varWin.toUpperCase()}: ${win.start} → ${win.end} · ${win.n_sessions_used} sessions · frozen positions · sessions from ${cal.source} (not an official exchange calendar) · last confirmed close ${prov.asof_last_confirmed_close} · calc ${prov.calculator_code_hash} · data ${prov.data_snapshot_hash}`;}
+// ---------- (f) stress P&L
+function renderStress(){const st=R.stress||[];if(!st.length){setPanel('#stress-panel','empty','no stress scenarios in this payload');return;}const inv=fmt.pct((R.weights||{}).invested),cash=fmt.pct((R.weights||{}).cash);
+ const contrib=s=>(s.contributors||[]).slice(0,3).map(c=>esc(c.ticker)+' '+sgn(c.pnl)).join(', ')||'–';const cov=s=>fmt.pct(s.coverage,0)+(s.uncovered&&s.uncovered.length?' (ex '+esc(s.uncovered.join(', '))+')':'');
+ $('#stress tbody').innerHTML=st.map(s=>`<tr><td class="t">${esc(s.name)}</td><td class="num">${sgn(s.shock,0)}</td><td class="num ${cls(s.pnl)}">${sgn(s.pnl)}</td><td class="num">${s.portfolio_beta!=null?fmt.num(s.portfolio_beta):'–'}</td><td class="num">${cov(s)}</td><td>${contrib(s)}</td><td class="wrap small">${esc(s.method||'')}</td></tr>`).join('');
+ $('#stress-cards').innerHTML=st.map(s=>card(s.name,t('shock {shock}',{shock:sgn(s.shock,0)}),[['P&L (% NAV)',`<span class="${cls(s.pnl)}">${sgn(s.pnl)}</span>`],['Portfolio β',s.portfolio_beta!=null?fmt.num(s.portfolio_beta):'–'],['Coverage',cov(s)],['Contributors',contrib(s)],['Basis',esc(s.method||'')]])).join('');
+ const worst=st.slice().sort((a,b)=>(a.pnl??0)-(b.pnl??0))[0];
+ $('#stress-tk').textContent=worst?t("Worst scenario: {scenario} → {pnl} of NAV{beta}; {count} scenarios, cash {cash} unshocked. Beta shocks are linear approximations on realised betas, not a track record.",{scenario:worst.name,pnl:sgn(worst.pnl),beta:worst.portfolio_beta!=null?t(' (portfolio β {beta} on {invested} invested)',{beta:fmt.num(worst.portfolio_beta),invested:inv}):'',count:st.length,cash}):'';}
+// ---------- (g) realised betas
+const BETA_CARD={metrics:[['Target w',r=>fmt.pct(r.weight)],['β SOXX',r=>fmt.num(r.soxx)],['β SPY',r=>fmt.num(r.spy)],['w·β SOXX',r=>fmt.num(r.wsoxx,3)],['w·β SPY',r=>fmt.num(r.wspy,3)]]};
+function renderBetas(){const b=R.betas||{};const w=(R.weights||{}).executable||{};const rows=Object.keys(b).map(t=>({ticker:t,weight:w[t],soxx:b[t].soxx,spy:b[t].spy,wsoxx:b[t].soxx!=null&&w[t]!=null?b[t].soxx*w[t]:null,wspy:b[t].spy!=null&&w[t]!=null?b[t].spy*w[t]:null}));
+ if(!rows.length){setPanel('#beta-panel','empty','no realised betas (insufficient common price history)');return;}
+ const ps=rows.reduce((a,r)=>a+(r.wsoxx||0),0),pp=rows.reduce((a,r)=>a+(r.wspy||0),0);const win=(R.var||{}).window||{};
+ $('#beta-note').textContent=t("portfolio β SOXX {soxx} · β SPY {spy} (Σ weight × β, cash at 0){days}",{soxx:fmt.num(ps),spy:fmt.num(pp),days:win.n_days?t(' · {count} daily returns',{count:win.n_days}):''});
+ sortable('beta',rows,r=>`<tr class="row">${rowLink(r.ticker)}<td class="num">${fmt.pct(r.weight)}</td><td class="num">${fmt.num(r.soxx)}</td><td class="num">${fmt.num(r.spy)}</td><td class="num">${fmt.num(r.wsoxx,3)}</td><td class="num">${fmt.num(r.wspy,3)}</td></tr>`,'weight',true,{card:r=>cardRow(r,BETA_CARD),emptyText:'No betas.'});}
+// ---------- (h) event concentration
+function renderEvents(){const e=R.event_concentration||{};const rows=e.names||[];const days=e.days||14;
+ $('#evc-kpis').innerHTML=[['Names reporting',String(e.n||0),t("within {days} days",{days})],['Weight sum',fmt.pct(e.weight_sum)||'0.0%','executable target weight'],['Share of invested',fmt.pct(e.weight_share_of_invested)||'0.0%','of the invested sleeve']].map(kpi).join('');
+ $('#evc-note').textContent=t("target names with earnings in the next {days} days",{days});
+ $('#evc tbody').innerHTML=rows.length?rows.map(r=>`<tr class="row">${rowLink(r.ticker)}<td>${esc(r.next_earnings)}</td><td class="num">${r.days_ahead}</td><td class="num">${fmt.pct(r.weight)}</td></tr>`).join(''):`<tr><td colspan="4" class="empty">${esc(t('No earnings events are recorded within the next {days} days. Calendar completeness is unverified.',{days}))}</td></tr>`;
+ $('#evc-nodate').textContent=(e.no_date&&e.no_date.length?t('No earnings date on file: {names}. ',{names:e.no_date.join(', ')}):'')+t('Snapshot calendar; past or missing vendor dates may understate event concentration.');}
+// ---------- (i) liquidity
+const LIQ_CARD={metrics:[['Target w',r=>fmt.pct(r.weight)],['Mkt cap',r=>r.market_cap!=null?'$'+fmt.big(r.market_cap):'–'],['ADV 20d ($)',r=>r.adv_20d_usd!=null?'$'+fmt.big(r.adv_20d_usd):'<span class="na">'+NA_VOL+'</span>'],['Days to liquidate',r=>r.days_to_liquidate!=null?fmt.num(r.days_to_liquidate,1):'<span class="na">'+NA_BOTH+'</span>'],['Cost impact',r=>r.cost_impact_bps!=null?fmt.num(r.cost_impact_bps,0)+' bp':'<span class="na">'+NA_BOTH+'</span>']]};
+function renderLiq(){const L=R.liquidity||{};const rows=(L.positions||[]).slice();if(!rows.length){setPanel('#liq-panel','empty','no target names');return;}const c=L.computable||{};
+ const na=source=>`<td class="na">${esc(t(source))}</td>`;
+ sortable('liq',rows,r=>`<tr class="row">${rowLink(r.ticker)}<td class="num">${fmt.pct(r.weight)}</td><td class="num">${r.market_cap!=null?'$'+fmt.big(r.market_cap):'–'}</td>${r.adv_20d_shares!=null?'<td class="num">'+shares(r.adv_20d_shares)+'</td>':na(NA_VOL)}${r.adv_20d_usd!=null?'<td class="num">$'+fmt.big(r.adv_20d_usd)+'</td>':na(NA_VOL)}${r.position_usd!=null?'<td class="num">$'+fmt.big(r.position_usd)+'</td>':na(NA_NAV)}${r.days_to_liquidate!=null?'<td class="num">'+fmt.num(r.days_to_liquidate,1)+'</td>':na(NA_BOTH)}${r.cost_impact_bps!=null?'<td class="num">'+fmt.num(r.cost_impact_bps,0)+' bp</td>':na(NA_BOTH)}</tr>`,'weight',true,{card:r=>cardRow(r,LIQ_CARD),emptyText:'No names.'});tableTools('liq',{label:'liquidity'});
+ $('#liq-note').textContent=t("ADV {adv} · days-to-liquidate {days} · cost impact {cost}{nav}",{adv:t(c.adv?'20-day, price cache':'not available'),days:t(c.days_to_liquidate?'computed':'not computable'),cost:t(c.cost_impact?'computed':'not computable'),nav:L.nav_usd!=null?' · NAV $'+fmt.big(L.nav_usd):t(' · no NAV')});
+ const adv=rows.filter(r=>r.adv_20d_usd!=null).sort((a,b)=>a.adv_20d_usd-b.adv_20d_usd);
+ $('#liq-tk').textContent=(adv.length?t("Thinnest name by 20-day dollar ADV: {thin} at ${min} (target {weight}); deepest {deep} at ${max}. ",{thin:adv[0].ticker,min:fmt.big(adv[0].adv_20d_usd),weight:fmt.pct(adv[0].weight),deep:adv[adv.length-1].ticker,max:fmt.big(adv[adv.length-1].adv_20d_usd)}):t('No volume data in the price cache. '))+(L.note||'');}
+// ---------- (j) current vs target
+const CVT_CARD={metrics:[['Current live w',r=>r.current_live_weight!=null?fmt.pct(r.current_live_weight):'<span class="na">no ledger</span>'],['Target executable w',r=>fmt.pct(r.target_executable_weight)],['Target model w',r=>fmt.pct(r.target_model_weight)],['Trade',r=>'<span class="na">n/a (no ledger)</span>']]};
+function renderCvt(){const c=R.current_vs_target||{};const rows=c.rows||[];if(!rows.length){setPanel('#cvt-panel','empty','no target names');return;}$('#cvt-note').textContent=c.note||'no ledger';
+ sortable('cvt',rows,r=>`<tr class="row">${rowLink(r.ticker)}<td class="num">${r.current_live_weight!=null?fmt.pct(r.current_live_weight):'<span class="na">no ledger</span>'}</td><td class="num">${fmt.pct(r.target_executable_weight)}</td><td class="num">${fmt.pct(r.target_model_weight)}</td><td class="num">${r.delta!=null?sgn(r.delta):'<span class="na">n/a</span>'}</td><td><span class="na">n/a (no ledger)</span></td></tr>`,'target_executable_weight',true,{card:r=>cardRow(r,CVT_CARD),emptyText:'No names.'});}
+// ---------- (k) pre-trade compliance
+function renderCompliance(){const c=R.compliance||{};const ch=c.checks||[];if(!ch.length){setPanel('#comp-panel','empty','no compliance checks in this payload');return;}
+ const isScale=n=>/scale/i.test(n||'');const fv=(x,n)=>x==null?'–':(isScale(n)?fmt.num(x,3):fmt.pct(x,2));const mark=ok=>ok===true?'✓':ok===false?'✗':'?';const bcls=ok=>ok===true?'pass':ok===false?'fail':'na';
+ const counted=RiskReview.checks(c);const failed=counted.failed;
+ $('#comp-sum').innerHTML=`<span class="badge ${bcls(c.ok)}">${counted.passed===counted.total?'✓ target checks pass':failed?'✗ '+failed+' failed':'? unknown'}</span> ${counted.passed} of ${counted.total} checks pass · ${counted.unknown} unknown · target constraints only`;
+ $('#checks').innerHTML=ch.map(k=>`<li><span class="badge ${bcls(k.ok)}" aria-label="${k.ok===true?'pass':k.ok===false?'fail':'unknown'}">${mark(k.ok)}</span><div><div class="nm">${esc(k.name)}</div><div>value ${fv(k.value,k.name)}${k.limit!=null?' vs limit '+fv(k.limit,k.name):' · no numeric limit'}${k.detail?' · '+esc(k.detail):''}</div>${k.segments?'<div class="dt">'+Object.entries(k.segments).map(([s,v])=>esc(s)+' '+fmt.pct(v,1)).join(' · ')+'</div>':''}</div></li>`).join('');
+ const cfg=c.config||{};$('#comp-basis').textContent=(c.basis||'')+(Object.keys(cfg).length?` · limits: ${fmt.pct(cfg.min_weight,0)}–${fmt.pct(cfg.max_weight,0)} per name, ${fmt.pct(cfg.max_segment_weight,0)} per segment, vol target ${fmt.pct(cfg.vol_target,0)}, primary ${cfg.primary||''}`:'')+'. These checks apply to the target weights of the run: there is no live position ledger, so nothing here describes positions or orders.';}
+document.addEventListener('themechange',()=>{redraw();});
+document.addEventListener('languagechange',()=>{if(!R||document.body.dataset.reviewState!=='ready')return;hdr();scope();renderReview();if(matrixPaint)matrixPaint();renderSelection();render();diagReady.clear();renderOpenDiagnostics();});
+bindDiagnostics();
+watchPublishedRun(()=>R?.run?.run_id,load);
+load();
+</script></body></html>

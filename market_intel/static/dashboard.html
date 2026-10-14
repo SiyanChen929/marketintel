@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" id="theme-color" content="#fcfcfb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Market Intel</title>
+<link rel="stylesheet" href="/static/base.css">
+<script src="/static/base.js"></script>
+<style>
+/* page layout: three independent columns on desktop (panels stack inside each column), one column at <=760px in DOM order.
+   Tokens, chips, dots, tables, badges, buttons, forms and the toast come from base.css; only feed/board specifics live here. */
+main.home{grid-template-columns:minmax(380px,1.3fr) minmax(340px,1fr) minmax(300px,.9fr);align-items:start}
+.col{display:grid;gap:16px;align-content:start;min-width:0}
+@media (max-width:1180px){main.home{grid-template-columns:1fr 1fr}.col3{grid-column:1/-1;grid-template-columns:1fr 1fr}}
+@media (max-width:760px){main.home{grid-template-columns:1fr}.col,.col3{grid-template-columns:1fr;gap:10px}}
+.filters{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}.filters input[type=search]{flex:1;min-width:140px}
+.mobile-jumps,.mobile-sort,.mobile-more{display:none}
+/* escalation cards */
+.ar{padding:9px 10px 9px 12px;scroll-margin-top:8px;border-left:3px solid var(--axis);border-bottom:1px solid var(--grid)}.ar:last-child{border-bottom:0}.ar.critical{border-left-color:var(--crit)}.ar.warning{border-left-color:var(--warn)}.ar.read{opacity:.72}
+.ar .meta{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:12px;color:var(--muted);align-items:center}.ar .t{font-weight:700;color:var(--ink);font-size:13px}.ar .t small{font-weight:400;color:var(--muted);margin-left:4px;font-size:12px}
+.ar .title{display:block;margin:3px 0 2px;font-weight:600;text-decoration:none;color:var(--ink);font-size:13.5px}.ar .title:hover{text-decoration:underline}.ar .line{color:var(--ink2);font-size:12.5px}
+.ar .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center}
+.act{font-size:12px;color:var(--up);font-weight:600}.act.neg{color:var(--neg)}.unread{color:var(--pos);font-weight:700;font-size:12px}
+/* feed cards */
+#feed-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:8px}@media (max-width:576px){#feed-list{grid-template-columns:1fr}}
+.ev{padding:9px 10px 9px 12px;border:1px solid var(--grid);border-left:3px solid var(--axis);border-radius:8px;position:relative;min-width:0}.ev.critical{border-left-color:var(--crit)}.ev.warning{border-left-color:var(--warn)}.ev.info{border-left-color:var(--pos)}
+.ev.new{box-shadow:0 0 0 2px color-mix(in srgb,var(--pos) 45%,transparent)}.ev.read{opacity:.72}
+.ev .meta{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;color:var(--muted);align-items:center}.ev .meta b{color:var(--ink2);font-weight:600}
+.ev .title{display:block;margin:3px 0 2px;font-weight:600;text-decoration:none;color:var(--ink);font-size:13.5px}.ev .title:hover{text-decoration:underline}
+.ev .line{color:var(--ink2);font-size:12.5px}.ev .tk{margin-top:4px}.tk span.rt{opacity:.75}
+.dir{font-weight:700}.dir.pos{color:var(--pos)}.dir.neg{color:var(--neg)}.dir.zero{color:var(--muted)}
+.mat{display:inline-block;width:46px;height:5px;background:var(--grid);border-radius:3px;vertical-align:middle;overflow:hidden}.mat i{display:block;height:100%;background:var(--ink2);border-radius:3px}
+.contrib{margin-top:4px;font-size:12px;color:var(--ink2);display:flex;flex-wrap:wrap;gap:4px 10px}
+/* impact board */
+.scorecell{display:flex;align-items:center;gap:8px}.scorecell .num{font-weight:600;min-width:44px;text-align:right}.scorecell .num.zero{color:var(--muted)}
+.bar{position:relative;width:110px;height:12px;flex:none}.bar:before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--axis)}.bar i{position:absolute;top:1px;height:10px;border-radius:0 3px 3px 0;background:var(--pos)}.bar i.neg{background:var(--neg);border-radius:3px 0 0 3px}
+#impact-panel .card .cm{grid-template-columns:auto 1fr}#impact-panel .card .cm b{white-space:nowrap}#impact-panel .card .cm span{white-space:normal;overflow-wrap:anywhere}
+td.last{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink2)}td.t small{color:var(--muted);font-weight:400;margin-left:4px;font-size:12px}
+/* side panels */
+.answer{margin-top:8px;font-size:13px}.answer h2,.answer h3,.answer h4{margin:10px 0 4px;font-size:13px;text-transform:none;letter-spacing:0;color:var(--ink)}.answer ul{margin:4px 0 6px 18px;padding:0}.answer li{margin:2px 0}.answer p{margin:6px 0}
+.answer a.cite{color:var(--pos);font-size:11px;text-decoration:none;vertical-align:super;padding:0 1px}.answer a.cite:hover{text-decoration:underline}
+.evid{font-size:12px;color:var(--ink2);margin:4px 0 0;padding-left:18px}.evid li{margin:2px 0;padding:2px 4px;border-radius:4px;transition:background .3s}.evid li.hl{background:color-mix(in srgb,var(--warn) 35%,transparent)}
+.cal .d{font-weight:700;margin-top:8px;font-size:12px}.cal .r{display:flex;gap:8px;font-size:12.5px;padding:2px 0;color:var(--ink2);align-items:baseline}.cal .r .tm{width:44px;color:var(--muted);flex:none;font-size:12px}.cal .r.imp3,.cal .r.target{color:var(--ink);font-weight:600}
+.brief{font-size:13px}.brief h1,.brief h2,.brief h3{font-size:13px;margin:8px 0 2px;text-transform:none;letter-spacing:0;color:var(--ink);font-weight:650}.brief ul{margin:2px 0 6px 18px;padding:0}.brief p{margin:4px 0}
+.srcs{display:flex;flex-wrap:wrap;gap:4px}.srcs span{font-size:11px;padding:1px 6px;border-radius:4px;background:var(--chip);color:var(--ink2)}.srcs span.bad{background:var(--crit);color:#fff}
+.hl-list{margin:0;padding:0;list-style:none}.hl-list li{padding:6px 0;border-bottom:1px solid var(--grid);font-size:12.5px}.hl-list li:last-child{border-bottom:0}.hl-list li a{text-decoration:none;font-weight:600}.hl-list li a:hover{text-decoration:underline}
+textarea{width:100%;min-height:64px;resize:vertical}
+@media (max-width:760px){
+ .mobile-jumps{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;grid-column:1/-1;margin:-2px 0 0;padding:2px 0;scroll-snap-type:x proximity}.mobile-jumps::-webkit-scrollbar{display:none}.mobile-jumps a{flex:none;scroll-snap-align:start}
+ .mobile-sort{display:flex;align-items:center;gap:8px;margin:0 0 8px;color:var(--muted);font-size:12px}.mobile-sort select{flex:1}
+ .mobile-more{display:block;margin-top:8px}.mobile-more .btn{width:100%;justify-content:center}
+ #ar-list.scroll{max-height:none!important;overflow:visible}
+ #feed-panel .filters input[type=search]{flex:1 1 100%;width:100%}
+ .phone-access{align-items:flex-start}.phone-access .chips{width:100%}.phone-access .chip.btn{flex:1;justify-content:center}
+}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to monitor</a>
+<header class="top"><h1>Market Intel</h1><span class="sub">AI &amp; semiconductor value chain</span><nav class="tabs" id="nav"></nav><div class="chips hdr" id="hdr"><span class="chip"><span class="dot" aria-hidden="true"></span> connecting…</span></div><button type="button" class="chip btn" id="btn-theme" aria-pressed="false" aria-label="Switch theme">◐</button></header>
+<main class="home" id="main-content" tabindex="-1">
+ <div id="banner" style="grid-column:1/-1"></div>
+ <nav class="mobile-jumps" aria-label="Monitor sections"><a class="chip btn" href="#actions-panel">Actions</a><a class="chip btn" href="#evidence-panel">Evidence</a><a class="chip btn" href="#impact-panel">Impact</a><a class="chip btn" href="#feed-panel">Feed</a><a class="chip btn" href="#health-panel">Health</a></nav>
+ <div class="col col1">
+  <section class="panel" id="actions-panel">
+   <div class="head"><h2>Action required</h2><span class="small" id="ar-note"></span></div>
+   <div class="filters" role="group" aria-label="Escalation filters">
+    <select id="ar-level" aria-label="Alert level"><option value="">all levels</option><option value="critical">critical</option><option value="warning">warning</option></select>
+    <select id="ar-ticker" aria-label="Target name"><option value="">all target names</option></select>
+    <label class="small"><input type="checkbox" id="ar-unread" checked> unread only</label>
+    <button type="button" class="chip btn" id="ar-readall" aria-label="Mark all listed escalations read">Mark all read</button>
+   </div>
+   <div id="ar-list" class="scroll" style="max-height:640px"></div>
+   <div class="mobile-more"><button type="button" class="chip btn" id="ar-more" hidden>Show more alerts</button></div>
+  </section>
+  <section class="panel" id="impact-panel">
+   <div class="head"><h2>Portfolio impact</h2><span class="small" id="board-asof"></span></div>
+   <details style="margin-bottom:6px"><summary>How this board is computed</summary><div class="note"><b>7d</b> = sum of signed event impacts (direction/2 × materiality × confidence; read-through scaled down) over 7 days, decayed with a 36h half-life · <b>1d</b> = the same impacts for events in the last 24h, undecayed · <b>n</b> = stories / copies in 7 days (copies of one story are scored once) · <b>px</b> = intraday move vs previous close (04:00-20:00 ET) · <b>level</b> = highest alert level on direct events in 48h · <b>target</b> = executable target weight of the canonical run (model weight in the tooltip); no live position ledger. Click a row to filter the live feed by that name.</div></details>
+   <label class="mobile-sort" for="impact-sort">Sort impact <select id="impact-sort"><option value="abs7">Largest 7d move</option><option value="event_score_7d">Most positive 7d</option><option value="event_score_1d">Most positive 1d</option><option value="px_pct">Price move</option><option value="ticker">Ticker</option></select></label>
+   <div class="tblwrap"><table id="board-table"><caption class="sr-only">Target-list names ranked by 7-day event impact</caption><thead><tr><th data-k="ticker">Ticker</th><th data-k="event_score_7d" title="7-day decayed event score">7d score</th><th class="num" data-k="event_score_1d" title="impacts in the last 24h, undecayed">1d</th><th class="num" data-k="n_events_7d" title="stories / copies in 7 days">n</th><th class="num" data-k="px_pct" title="intraday move vs previous close">px today</th><th data-k="alert_level" title="highest alert level among direct events in the last 48h">level</th><th data-k="last_event_title" title="most recent substantive direct event">last event</th></tr></thead><tbody></tbody></table></div>
+   <div class="mobile-more"><button type="button" class="chip btn" id="impact-more" hidden>Show all impacts</button></div>
+   <details style="margin-top:8px"><summary>Strongest movers outside the target list</summary><div id="movers"></div></details>
+  </section>
+ </div>
+ <div class="col col2">
+  <section class="panel" id="cat-panel"><div class="head"><h2>Upcoming catalysts</h2><span class="small" id="cat-note"></span></div><div class="cal" id="catalysts"></div></section>
+  <section class="panel" id="evidence-panel"><div class="head"><h2>New evidence since last visit</h2><div class="chips"><span class="small" id="ne-note"></span><button type="button" class="chip btn" id="ne-seen" aria-label="Record now as the last visit">Seen</button></div></div><ul class="hl-list" id="ne-list"></ul></section>
+  <section class="panel" id="health-panel"><div class="head"><h2>System &amp; data health</h2><div class="chips"><button type="button" class="chip btn" id="btn-poll" aria-busy="false" title="Run a polling cycle now and refresh when it finishes">⟳ Poll now</button></div></div><div class="kpis" id="health-kpis"></div><div class="chips" id="health-chips" style="margin-top:8px"></div><div id="feed-errors" class="small" style="margin-top:6px"></div><div class="phone-access note" id="phone-access"><div><b>Phone access</b><div class="small" id="phone-access-note">checking secure tunnel…</div></div><div class="chips"><a class="chip btn" id="phone-url" href="#" target="_blank" rel="noopener" hidden>Open secure URL</a><button type="button" class="chip btn" id="phone-copy" hidden>Copy URL</button></div></div></section>
+ </div>
+ <div class="col col3">
+  <section class="panel" id="ask-panel">
+   <div class="head"><h2>Ask</h2><span class="small" id="llm-note"></span></div>
+   <textarea id="question" aria-label="Question" placeholder="e.g. What happened to the memory names this week and does it change the MU thesis?"></textarea>
+   <div class="chips" style="margin-top:6px"><button type="button" class="primary" id="btn-ask">Ask</button><span class="small">answers cite evidence [n] from the store · ⌘/Ctrl+Enter</span></div>
+   <div class="answer" id="answer" aria-live="polite"></div>
+   <details id="evidence" hidden><summary>Evidence</summary><ol class="evid" id="evidence-list"></ol></details>
+  </section>
+  <section class="panel" id="cal-panel"><div class="head"><h2>Today &amp; this week</h2><span class="small" id="cal-note"></span></div><div class="cal" id="calendar"></div></section>
+  <section class="panel" id="brief-panel"><div class="head"><h2 id="brief-title">Brief</h2><div class="chips"><span class="small" id="brief-date"></span><button type="button" class="chip btn" id="btn-brief" aria-busy="false" title="Rebuild the brief for the current session">☼ Rebuild</button></div></div><div class="brief" id="brief-text" translate="no"></div></section>
+  <section class="panel" id="src-panel"><div class="head"><h2>Sources</h2><span class="small" id="src-note"></span></div><div class="srcs" id="sources"></div></section>
+ </div>
+ <section class="panel wide" id="feed-panel">
+  <div class="head"><h2>Live feed</h2><span class="small" id="feed-count"></span></div>
+  <div class="filters" role="group" aria-label="Feed filters">
+   <button type="button" class="chip btn on" data-f="focus" aria-pressed="true" title="Focus = direct events on target-list names at warning/critical level that are still unread (server filter: target names; level and read state applied client-side)">Focus</button><button type="button" class="chip btn" data-f="all" aria-pressed="false">All</button><button type="button" class="chip btn" data-f="holdings" aria-pressed="false" title="events on target-list names (direct or read-through)">Target list</button><button type="button" class="chip btn" data-f="alerts" aria-pressed="false">Alerts</button>
+   <button type="button" class="chip btn" data-f="material" aria-pressed="false">Material</button><button type="button" class="chip btn" data-f="sec" aria-pressed="false">SEC</button><button type="button" class="chip btn" data-f="macro" aria-pressed="false">Macro</button><button type="button" class="chip btn" data-f="price" aria-pressed="false">Moves</button>
+   <input type="search" id="q" placeholder="search events…" aria-label="Search events"><select id="hours" aria-label="Window"><option value="12">12h</option><option value="24">24h</option><option value="48" selected>48h</option><option value="168">7d</option></select>
+   <label class="small" title="include items the classifier marked irrelevant"><input type="checkbox" id="allitems"> show all</label>
+   <label class="small" title="show every outlet's copy of a story instead of one representative per story"><input type="checkbox" id="copies"> copies</label>
+  </div>
+  <div id="ticker-filter" class="small" hidden style="margin-bottom:8px">Filtered by <b id="tf"></b> · <a href="#" id="tf-clear">clear</a></div>
+  <div id="feed-list"></div>
+  <div class="chips" style="margin-top:10px"><button type="button" class="chip btn" id="feed-more" hidden>Load more</button><span class="small" id="feed-more-note"></span></div>
+ </section>
+</main>
+<script>
+renderNav('/');themeInit();
+const themeMeta=$('#theme-color');const syncThemeMeta=()=>{themeMeta.content=isDark()?'#1a1a19':'#fcfcfb';};syncThemeMeta();document.addEventListener('themechange',syncThemeMeta);
+const LIMIT=50;                                    // feed page size; "Load more" advances ?offset=
+const TICK_LOOKBACK_H=6;                           // incremental refresh: since = last as_of - 6h (catches late-ingested items; ids already shown are skipped)
+const state={filter:'focus',ticker:null,q:'',hours:48,all:false,copies:false,holdings:[],feeds:{},run:null,lastOk:null,A:null,offset:0,asOf:null,ids:new Set(),stories:new Map(),total:0,arLevel:'',arTicker:'',arUnread:true,arShown:5,impactExpanded:false,publicUrl:null};
+const PHONE_MQ=matchMedia('(max-width:760px)');
+const DIR={2:['▲▲','pos'],1:['▲','pos'],0:['•','zero'],'-1':['▼','neg'],'-2':['▼▼','neg']};
+const PANELS=['#actions-panel','#impact-panel','#cat-panel','#evidence-panel','#health-panel'];
+const hm=s=>{if(!s)return '';const d=new Date(s);return isNaN(d)?'':d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});};
+const dt=s=>{if(!s)return '';const d=new Date(s);return isNaN(d)?String(s).slice(0,16):d.toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function lastVisit(){try{return localStorage.getItem('mi-last-visit')||'';}catch(e){return '';}}
+function analyst(){try{return localStorage.getItem('mi-analyst')||'analyst';}catch(e){return 'analyst';}}
+function feedName(id){const f=state.feeds[id];return f&&f.name&&f.name!==id?f.name:String(id||'').replace(/_/g,' ');}
+// ---------- URL state: ?ticker= ?filter= ?q= ?hours= (read on load, replaceState on change); a ticker without an explicit filter opens "All" so any name shows
+(function(){const q=qs();const t=(q.get('ticker')||'').toUpperCase().trim();if(t){state.ticker=t;state.filter='all';}const f=q.get('filter');if(f&&$$('#feed-panel [data-f]').some(c=>c.dataset.f===f))state.filter=f;
+ if(q.get('q')){state.q=q.get('q').trim();$('#q').value=state.q;}const h=+q.get('hours');if([12,24,48,168].includes(h)){state.hours=h;$('#hours').value=String(h);}})();
+function syncQS(){setQS({ticker:state.ticker||'',filter:state.filter==='focus'?'':state.filter,q:state.q||'',hours:state.hours===48?'':state.hours});}
+function syncChips(){$$('#feed-panel [data-f]').forEach(x=>{const on=x.dataset.f===state.filter;x.classList.toggle('on',on);x.setAttribute('aria-pressed',on?'true':'false');});}
+// ---------- header: canonical run chip + the three counts + as-of chip
+function hdr(stale){const c=(state.A&&state.A.counts)||{};const run=state.run||(state.A&&state.A.run);
+ $('#hdr').innerHTML=(state.A?`<a class="chip btn" href="#actions-panel" title="warning/critical events on target-list names in the last 48h, one per story">${esc(window.t('{alerts} alerts · {unread} unread',{alerts:c.escalations_open||0,unread:c.escalations_unread||0}))}</a><a class="chip btn" href="/cases" title="${esc(window.t('review cases open, acknowledged or in review{overdue}',{overdue:c.cases_overdue?window.t(' · {count} overdue',{count:c.cases_overdue}):''}))}">${esc(window.t('{count} cases{overdue}',{count:c.cases_open||0,overdue:c.cases_overdue?window.t(' · {count} overdue',{count:c.cases_overdue}):''}))}</a>`:'')+runChip(run)+(state.A?`<span class="chip" title="${esc(window.t('relevant events in the last 24 hours ({count} items in total)',{count:c.events_24h||0}))}">${esc(window.t('{count} relevant events (24h)',{count:c.relevant_24h||0}))}</span>`:'')+asOfChip(run&&run.asof_session,state.lastOk,stale);}
+// ---------- status: banner, feeds (friendly names, id in the tooltip), LLM note
+async function loadStatus(){let s;try{s=await fetchJSON('/api/status','status');}catch(e){if(e.stale)return;$('#hdr').innerHTML='<span class="chip bad"><span class="dot bad" aria-hidden="true"></span>server unreachable</span>';setPanel('#src-panel','error',window.t('failed to load: {error}',{error:e.message}),loadStatus);return;}
+ state.holdings=s.holdings||[];state.feeds=s.feeds||{};state.run=s.run;state.publicUrl=s.public_url||null;state.lastOk=new Date();$('#banner').innerHTML=statusBanner(s.run);hdr();renderPhoneAccess(state.publicUrl,s.auth!==false);
+ const llm=s.llm||{};$('#llm-note').textContent=llm.available?(llm.provider||'LLM')+' '+(llm.model||''):'rules-only mode: evidence without synthesis';
+ const keys=Object.keys(state.feeds).sort((a,b)=>feedName(a).localeCompare(feedName(b)));
+ $('#sources').innerHTML=keys.map(k=>{const f=state.feeds[k];const bad=f.error||(f.status&&f.status!==200&&f.status!==304);return `<span class="${bad?'bad':''}" title="${esc(k)}${f.status?' · HTTP '+esc(f.status):''}${f.error?' · '+esc(f.error):''}">${esc(feedName(k))}${f.items?' · '+f.items:''}${f.age?' · '+esc(f.age):''}</span>`;}).join('');
+ const lc=s.last_cycle||{};$('#src-note').textContent=window.t('{count} feeds · cycle {cycle}{duration}',{count:keys.length,cycle:lc.cycle||'-',duration:lc.duration_s?' · '+lc.duration_s+'s':''});setPanel('#src-panel',keys.length?'fresh':'empty',keys.length?'':'no feed state yet (first poll pending)');
+ if(state.A)renderHealth();}
+// ---------- action feed: one payload for the five decision panels
+async function loadActions(){const p=new URLSearchParams({hours:48});const lv=lastVisit();if(lv)p.set('since',lv);let A;
+ try{A=await fetchJSON(`/api/actions?${p}`,'actions');}catch(e){if(e.stale)return;PANELS.forEach(x=>setPanel(x,'error',window.t('failed to load: {error}',{error:e.message}),loadActions));hdr(true);return;}
+ state.A=A;state.lastOk=new Date();if(!state.run)state.run=A.run;hdr();renderActions();renderImpact();renderCatalysts();renderEvidence();renderHealth();}
+function arItems(){let it=(state.A&&state.A.action_required)||[];if(state.arLevel)it=it.filter(i=>i.level===state.arLevel);if(state.arTicker)it=it.filter(i=>i.ticker===state.arTicker);if(state.arUnread)it=it.filter(i=>!i.read);return it;}
+function arCard(i){const d=DIR[i.direction]||DIR[0];
+ const cs=i.case_id?`<a class="cst ${esc(i.case_status||'open')}" href="/cases?id=${i.case_id}" title="review case #${i.case_id}${i.case_due?' · due '+esc(dt(i.case_due)):''}">${esc(window.t('case #{id} · {status}',{id:i.case_id,status:window.t(String(i.case_status||'open').replace('_',' '))}))}</a>`:'<span class="cst none" title="no review case yet: acknowledging opens one">no case</span>';
+ const activeCase=i.case_id&&['open','acknowledged','in_review'].includes(i.case_status);const overdue=activeCase&&i.case_due&&new Date(i.case_due)<new Date();const due=activeCase&&i.case_due?`<span class="case-due${overdue?' overdue':''}">${overdue?'overdue':'due'} ${esc(dt(i.case_due))}</span>`:'';
+ return `<article class="ar ${esc(i.level||'')}${i.read?' read':''}" data-id="${esc(i.id)}" data-ticker="${esc(i.ticker)}">
+ <div class="meta">${Badge(i.level)}<span class="t">${esc(i.ticker)}<small title="${esc(window.t('executable target weight (model {model}) · no live position ledger',{model:fmt.pct(i.model_weight)}))}">${esc(window.t('target {weight}',{weight:fmt.pct(i.weight)}))}</small></span><span>${esc(i.age||'')}</span><span translate="no">${esc(i.source_name||'')}</span><span>${esc(window.t(i.event_type||''))}</span><span class="dir ${d[1]}" title="direction">${d[0]}</span>${i.n_copies>1?`<span class="chip sm" title="${i.n_copies} copies from ${i.n_independent||1} independent source famil${i.n_independent===1?'y':'ies'} · story status ${esc(i.story_status||'active')} · scored once per story">×${i.n_copies}</span>`:''}${i.needs_review?'<span class="lvl warning" title="rule-engine fan-out exceeds the cap; read-through withheld until the LLM or an analyst confirms the edges">review</span>':''}${i.read?'<span>read</span>':'<span class="unread">unread</span>'}</div>
+ <a class="title" translate="no" href="${esc(i.url||'#')}" target="_blank" rel="noopener">${esc(i.title)}</a>${i.one_liner?`<div class="line" translate="no">${esc(i.one_liner)}</div>`:''}
+ <div class="acts"><span class="act ${i.direction<0?'neg':''}" title="analyst action suggested by the classifier">${esc(window.t(i.action&&i.action!=='none'?i.action:'monitor'))}</span>${cs}${due}<button type="button" class="chip btn" data-act="ack" aria-label="${esc(window.t('Acknowledge the {ticker} escalation',{ticker:i.ticker}))}">Acknowledge</button>${i.read?'':`<button type="button" class="chip btn" data-act="read" aria-label="${esc(window.t('Mark the {ticker} escalation read',{ticker:i.ticker}))}">Mark read</button>`}<a class="chip btn" href="${i.case_id?'/cases?id='+i.case_id:'/cases?ticker='+encodeURIComponent(i.ticker)}" aria-label="${esc(window.t('Open the review case for {ticker}',{ticker:i.ticker}))}">Open case</a><button type="button" class="chip btn" data-act="feed" aria-label="${esc(window.t('Show {ticker} in the live feed',{ticker:i.ticker}))}">In feed</button></div></article>`;}
+function renderActions(){const all=(state.A&&state.A.action_required)||[];const sel=$('#ar-ticker');const cur=sel.value;const tks=[...new Set(all.map(i=>i.ticker))].sort();
+ sel.innerHTML='<option value="">all target names</option>'+tks.map(t=>`<option value="${esc(t)}"${t===cur?' selected':''}>${esc(t)}</option>`).join('');state.arTicker=tks.includes(cur)?cur:'';
+ const it=arItems();const shown=PHONE_MQ.matches?it.slice(0,state.arShown):it;const hidden=all.length-it.length;const more=$('#ar-more');
+ $('#ar-note').textContent=PHONE_MQ.matches&&shown.length<it.length?window.t('{shown} of {count} matching · {total} total',{shown:shown.length,count:it.length,total:all.length}):window.t('{count} of {total} · 48h · one per story',{count:it.length,total:all.length});$('#ar-readall').disabled=!it.some(i=>!i.read);
+ more.hidden=!PHONE_MQ.matches||shown.length>=it.length;more.textContent=window.t('Show {count} more alerts',{count:Math.min(5,it.length-shown.length)});
+ if(!all.length){setPanel('#actions-panel','empty','no warning/critical events on target-list names in the last 48h');$('#ar-list').innerHTML='';more.hidden=true;return;}
+ setPanel('#actions-panel','fresh');$('#ar-list').innerHTML=it.length?shown.map(arCard).join(''):`<div class="empty">${esc(window.t('Nothing matches these filters{hidden}.',{hidden:hidden?window.t(' · {count} hidden{read}',{count:hidden,read:state.arUnread?window.t(' (already read)'):''}):''}))}</div>`;}
+function resetActions(){state.arShown=5;renderActions();}
+$('#ar-level').addEventListener('change',e=>{state.arLevel=e.target.value;resetActions();});$('#ar-ticker').addEventListener('change',e=>{state.arTicker=e.target.value;resetActions();});$('#ar-unread').addEventListener('change',e=>{state.arUnread=e.target.checked;resetActions();});
+$('#ar-more').addEventListener('click',()=>{state.arShown+=5;renderActions();});
+$('#ar-list').addEventListener('click',async e=>{const b=e.target.closest('[data-act]');if(!b)return;const card=b.closest('.ar');const id=card.dataset.id,t=card.dataset.ticker;
+ if(b.dataset.act==='feed'){setTicker(t);$('#feed-panel').scrollIntoView({behavior:'smooth',block:'start'});return;}
+ busy(b,true,'…');try{if(b.dataset.act==='ack'){const r=await postJSON(`/api/events/${encodeURIComponent(id)}/ack`,{by:analyst()});Toast.ok(r.case?window.t('Acknowledged · case #{id} {status}',{id:r.case.id,status:window.t(String(r.case.status).replace('_',' '))}):'Acknowledged and marked read');}
+  else{await postJSON(`/api/events/${encodeURIComponent(id)}/read`,{});Toast.ok('Marked read');}markRead([id]);await Promise.all([loadActions(),loadStatus()]);}
+ catch(err){Toast.bad(window.t('Failed: {error}',{error:err.message}));busy(b,false);}});
+$('#ar-readall').addEventListener('click',async()=>{const ids=arItems().filter(i=>!i.read).map(i=>i.id);if(!ids.length)return;const b=$('#ar-readall');busy(b,true,'Marking…');
+ try{const r=await postJSON('/api/events/read',{ids});Toast.ok(window.t('Marked {count} read',{count:r.n}));markRead(ids);await Promise.all([loadActions(),loadStatus()]);}catch(err){Toast.bad(window.t('Failed: {error}',{error:err.message}));}busy(b,false);});
+// ---------- portfolio impact board (target-list names) + movers outside the list
+const IMPACT_CARD={ticker:'ticker',name:'name',segment:'segment',metrics:[['Target w',r=>fmt.pct(r.weight)],['7d score',r=>`<span class="${cls(r.event_score_7d)}">${fmt.num(r.event_score_7d)}</span>`],['1d',r=>fmt.num(r.event_score_1d)],['Stories / copies',r=>`${r.n_events_7d||0} / ${r.n_copies_7d||0}`],['px today',r=>r.px_pct==null?'':`<span class="${cls(r.px_pct)}">${fmt.pct(r.px_pct)}</span>`],['Level',r=>Badge(r.alert_level)],['Last event',r=>'<span translate="no">'+esc((r.last_event_title||'').slice(0,100))+'</span>'],['Feed',r=>`<button type="button" class="chip btn sm" data-tf="${esc(r.ticker)}" aria-label="${esc(window.t('Filter the live feed by {ticker}',{ticker:r.ticker}))}">filter feed</button>`]]};
+function renderImpact(){const rows=((state.A&&state.A.portfolio_impact)||[]).map(r=>Object.assign({},r,{abs7:Math.abs(r.event_score_7d||0)}));
+ $('#board-asof').textContent=rows.length&&rows[0].asof?window.t('overlay as of {time}',{time:hm(rows[0].asof)}):'';
+ if(!rows.length){setPanel('#impact-panel','empty','no target-list names in the canonical run');return;}setPanel('#impact-panel','fresh');
+ const tr=r=>{const s=r.event_score_7d||0;const w=Math.min(Math.abs(s),1)*55;const px=r.px_pct==null?'':`<span class="${cls(r.px_pct)}">${fmt.pct(r.px_pct)}</span>`;
+  return `<tr class="row${state.ticker===r.ticker?' sel':''}" data-t="${esc(r.ticker)}" tabindex="0" aria-label="${esc(window.t('{ticker}: filter the live feed',{ticker:r.ticker}))}"><td class="t">${esc(r.ticker)}<small title="${esc(window.t('executable target weight (model {model}) · no live position ledger',{model:fmt.pct(r.model_weight)}))}">${esc(window.t('target {weight}',{weight:fmt.pct(r.weight)}))}</small><span class="nm">${esc(r.name)} · <a href="/ticker/${encodeURIComponent(r.ticker)}" aria-label="${esc(window.t('{ticker} detail page',{ticker:r.ticker}))}">detail</a></span></td><td><div class="scorecell"><div class="bar" title="${s.toFixed(2)}"><i class="${s<0?'neg':''}" style="left:${s<0?55-w:55}px;width:${w}px"></i></div><span class="num ${s>0?'pos':s<0?'neg':'zero'}">${s>=0?'+':''}${s.toFixed(2)}</span></div></td><td class="num ${cls(r.event_score_1d)}">${fmt.num(r.event_score_1d)}</td><td class="num" title="${esc(window.t('stories / copies in 7 days (direct {count})',{count:r.n_direct_7d||0}))}">${r.n_events_7d||0}<span class="small">/${r.n_copies_7d||0}</span></td><td class="num">${px}</td><td>${Badge(r.alert_level)}</td><td class="last" title="${esc(r.last_event_title||'')}${r.last_event_at?' · '+esc(dt(r.last_event_at)):''}">${esc(r.last_event_title||'')}</td></tr>`;};
+ sortable('board-table',rows,tr,'abs7',true,{card:r=>cardRow(r,IMPACT_CARD),emptyText:'No target-list names.',onDraw:updateImpactLimit});tableTools('board-table',{label:'portfolio impact'});updateImpactLimit();}
+function updateImpactLimit(){const cards=$('#impact-panel').querySelectorAll('.cards>.card');const more=$('#impact-more');if(!cards.length){more.hidden=true;return;}cards.forEach((c,i)=>c.hidden=PHONE_MQ.matches&&!state.impactExpanded&&i>=5);more.hidden=!PHONE_MQ.matches||cards.length<=5;more.textContent=state.impactExpanded?'Show top 5':window.t('Show all {count} impacts',{count:cards.length});}
+$('#impact-more').addEventListener('click',()=>{state.impactExpanded=!state.impactExpanded;updateImpactLimit();});
+$('#impact-sort').addEventListener('change',e=>{const t=$('#board-table');if(!t._sort)return;t._sort.key=e.target.value;t._sort.desc=e.target.value!=='ticker';t._draw();announce(window.t('Portfolio impact sorted by {label}',{label:e.target.options[e.target.selectedIndex].text}));});
+$('#impact-panel').addEventListener('click',e=>{const b=e.target.closest('[data-tf]');if(b){setTicker(b.dataset.tf);$('#feed-panel').scrollIntoView({behavior:'smooth',block:'start'});return;}const tr=e.target.closest('tr.row[data-t]');if(!tr||e.target.closest('a,button,summary'))return;setTicker(state.ticker===tr.dataset.t?null:tr.dataset.t);});
+$('#impact-panel').addEventListener('keydown',e=>{const tr=e.target.closest('tr.row[data-t]');if(!tr||e.target!==tr||(e.key!=='Enter'&&e.key!==' '))return;e.preventDefault();setTicker(state.ticker===tr.dataset.t?null:tr.dataset.t);});
+async function loadMovers(){try{const d=await fetchJSON('/api/board','board');const rows=(d.rows||[]).filter(r=>!r.is_holding&&r.n_events_7d>0).sort((a,b)=>Math.abs(b.event_score_7d)-Math.abs(a.event_score_7d)).slice(0,12);
+ $('#movers').innerHTML=rows.length?`<div class="tblwrap"><table><caption class="sr-only">Strongest movers outside the target list</caption><thead><tr><th scope="col">Ticker</th><th scope="col" class="num">7d</th><th scope="col" class="num">n</th><th scope="col" class="num">px</th><th scope="col">last event</th></tr></thead><tbody>${rows.map(r=>`<tr class="row" data-t="${esc(r.ticker)}" tabindex="0" aria-label="${esc(window.t('{ticker}: filter the live feed',{ticker:r.ticker}))}"><td class="t"><a href="/ticker/${encodeURIComponent(r.ticker)}">${esc(r.ticker)}</a><span class="nm">${esc(r.name||'')}</span></td><td class="num ${cls(r.event_score_7d)}">${fmt.num(r.event_score_7d)}</td><td class="num">${r.n_events_7d||0}</td><td class="num ${cls(r.px_pct)}">${r.px_pct==null?'':fmt.pct(r.px_pct)}</td><td class="last" title="${esc(r.last_event_title||'')}">${esc(r.last_event_title||'')}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No movers outside the target list this week.</div>';}
+ catch(e){if(!e.stale)$('#movers').innerHTML='<div class="empty">Board unavailable.</div>';}}
+// ---------- catalysts (today .. +5d), new evidence since last visit, system & data health
+function renderCatalysts(){const rows=(state.A&&state.A.catalysts)||[];if(!rows.length){setPanel('#cat-panel','empty','no catalysts in the next 5 days (calendar pending)');$('#catalysts').innerHTML='';return;}setPanel('#cat-panel','fresh');
+ const by={};rows.forEach(r=>{(by[r.date]=by[r.date]||[]).push(r);});const dates=Object.keys(by).sort();const nT=rows.filter(r=>r.is_target).length;$('#cat-note').textContent=window.t('{count} in 5 days · {targets} target-list earnings',{count:rows.length,targets:nT});
+ const fmtD=(s,d0)=>{const d=new Date(s+'T12:00:00');return d.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'})+(d0===0?window.t(' · today'):d0===1?window.t(' · tomorrow'):'');};
+ $('#catalysts').innerHTML=dates.map(d=>`<div class="d">${esc(fmtD(d,by[d][0].days_ahead))}</div>`+by[d].map(r=>`<div class="r imp${r.importance||1}${r.is_target?' target':''}"><span class="tm">${esc(r.time_et||'')}</span><span>${'★'.repeat(Math.max(1,Math.min(3,r.importance||1)))} ${r.is_target?`<b translate="no">${esc(r.name)}</b> <span class="chip sm" title="executable target weight · no live position ledger">${esc(window.t('target {weight}',{weight:fmt.pct(r.weight)}))}</span>`:'<span translate="no">'+esc(r.name)+'</span>'}</span></div>`).join('')).join('');}
+function renderEvidence(){const ne=(state.A&&state.A.new_evidence)||{items:[],count:0};const lv=lastVisit();const sinceTxt=lv?dt(ne.since):'24h ago (no visit recorded yet)';
+ $('#ne-note').textContent=window.t('{count} stories since {since}{targets}',{count:ne.count||0,since:sinceTxt,targets:ne.n_on_targets?window.t(' · {count} on target names',{count:ne.n_on_targets}):''});
+ if(!(ne.items||[]).length){setPanel('#evidence-panel','empty',window.t('nothing new since {since}',{since:sinceTxt}));$('#ne-list').innerHTML='';return;}setPanel('#evidence-panel','fresh');
+ $('#ne-list').innerHTML=ne.items.map(i=>{const tt=new Set(i.target_tickers||[]);return `<li>${Badge(i.alert_level)} <a translate="no" href="${esc(i.url||'#')}" target="_blank" rel="noopener">${esc(i.one_liner||i.title)}</a><div class="small"><span class="tk">${(i.tickers||[]).slice(0,6).map(t=>`<span class="${tt.has(t)?'target':''}"${tt.has(t)?' title="target-list name"':''}>${esc(t)}</span>`).join('')}${i.tickers_rt&&i.tickers_rt.length?`<span class="rt">↳ ${esc(i.tickers_rt.slice(0,4).join(' '))}</span>`:''}</span> ${esc(i.event_type||'')} · ${esc(i.source_name||'')} · ${esc(i.age||'')}${i.n_copies>1?' · ×'+i.n_copies:''} · <span class="act ${i.direction<0?'neg':''}">${esc(window.t(i.action&&i.action!=='none'?i.action:'monitor'))}</span></div></li>`;}).join('');}
+$('#ne-seen').addEventListener('click',()=>{try{localStorage.setItem('mi-last-visit',new Date().toISOString());}catch(e){}Toast.ok('Last visit recorded');loadActions();});
+function renderHealth(){const A=state.A;if(!A)return;const h=A.system_health||{};const lc=h.last_cycle||{};const run=state.run||A.run||{};const llm=h.llm||{};const fe=(h.feeds||{}).errors||[];
+ const pollTxt=h.polling===true?'polling…':h.polling===false?'idle':'no poller';
+ $('#health-kpis').innerHTML=Kpi('Last cycle',lc.cycle!=null?'#'+esc(lc.cycle):'–',esc(lc.at_et||'')+(lc.duration_s?' · '+esc(lc.duration_s)+' s':'')+(h.cycle_stale?' · <b class="neg">stale</b>':'')+((lc.errors||[]).length?' · '+esc(window.t('{count} feed errors',{count:lc.errors.length})):''))
+  +Kpi('Feeds',esc((h.feeds||{}).n||0),fe.length?`<span class="neg">${esc(window.t('{count} with errors',{count:fe.length}))}</span>`:'no errors')
+  +Kpi('LLM',llm.available?esc(llm.provider||'LLM'):'rules only',llm.available?esc(llm.model||'auto')+(llm.calls?' · '+esc(window.t('{count} calls',{count:llm.calls})):''):esc(llm.disabled_reason||'no API key'))
+  +Kpi('Polling',esc(pollTxt),esc(window.t('every {minutes} min · {hours}',{minutes:Math.round((h.poll_interval_now||0)/60),hours:window.t(h.market_hours?'market hours':'off hours')})));
+ const ents=(run.data_health||{}).entries||{};const dh=h.data_health||{};const stale=dh.stale||[];
+ const chips=[`<span class="chip ${dh.status==='ok'?'':'warnc'}" title="run data health">${esc(window.t('data {status}',{status:window.t(dh.status||'unknown')}))}</span>`].concat(stale.slice(0,8).map(k=>{const e=ents[k]||{};return `<span class="chip ${e.status==='unavailable'?'bad':'warnc'}" title="${esc(e.stale_reason||'')}${e.effective_at?' · obs '+esc(e.effective_at):''}${e.fetched_at?' · fetched '+esc(String(e.fetched_at).slice(0,16).replace('T',' ')):''}">${esc(window.t((e.status||'stale').toUpperCase()))} <span translate="no">${esc(k)}</span></span>`;}),stale.length>8?[`<span class="chip warnc">${esc(window.t('+{count} more',{count:stale.length-8}))}</span>`]:[]);
+ const gaps=Object.keys(dh.price_gaps||{});if(gaps.length)chips.push(`<span class="chip warnc" title="${esc(gaps.map(t=>t+': '+(dh.price_gaps[t]||[]).join(', ')).join(' · '))}">${esc(window.t('price gaps: {tickers}',{tickers:gaps.join(', ')}))}</span>`);
+ if(run.actionable===false)chips.push(`<span class="chip bad" title="${esc((run.not_actionable_reasons||[]).join(' · '))}">run not actionable</span>`);
+ $('#health-chips').innerHTML=chips.join('');
+ $('#feed-errors').innerHTML=fe.length?'<b>Feed errors:</b> '+fe.map(f=>`<span class="chip bad" title="${esc(f.feed)}${f.status?' · HTTP '+esc(f.status):''}${f.last_fetch?' · '+esc(dt(f.last_fetch)):''}">${esc(feedName(f.feed))} · ${esc(f.error||'error')}${f.age?' · '+esc(f.age):''}</span>`).join(' '):'All feeds fetched without errors.';
+ setPanel('#health-panel',h.cycle_stale?'stale':'fresh',h.cycle_stale?'last cycle is stale':'');}
+function renderPhoneAccess(url,authOn){const link=$('#phone-url'),copy=$('#phone-copy'),note=$('#phone-access-note');link.hidden=copy.hidden=!url;if(!url){note.textContent='Secure tunnel offline · local access only';return;}link.href=url;note.textContent=window.t(authOn?'HTTPS · sign-in required':'Warning: remote authentication is disabled')+' · '+window.t('quick URL changes after a tunnel restart');}
+$('#phone-copy').addEventListener('click',async()=>{if(!state.publicUrl)return;try{await navigator.clipboard.writeText(state.publicUrl);Toast.ok('Phone URL copied');}catch(e){Toast.bad('Copy unavailable · long-press Open secure URL');}});
+// Poll now: start a cycle, then poll /api/status every 5 s until polling is false, then refresh everything (no fixed timer)
+$('#btn-poll').addEventListener('click',async()=>{const b=$('#btn-poll');busy(b,true,'Polling…');
+ try{const r=await postJSON('/api/poll',{});Toast.ok(r.started?'Polling cycle started':'A cycle is already running · waiting for it');}
+ catch(e){Toast.bad(/^400/.test(e.message)?'Poller not attached (serve --no-poll?)':window.t('Poll failed: {error}',{error:e.message}));busy(b,false);return;}
+ const t0=Date.now();while(Date.now()-t0<15*60*1000){await sleep(5000);try{const s=await fetchJSON('/api/status','poll-status');if(!s.polling)break;b.textContent=window.t('Polling… {seconds}s',{seconds:Math.round((Date.now()-t0)/1000)});}catch(e){if(!e.stale)break;}}
+ busy(b,false);Toast.ok('Cycle finished · refreshing');refreshAll(true);});
+// ---------- ask (streaming; [n] citations link to evidence item n)
+function md(t){let h=esc(t);h=h.replace(/^### (.*)$/gm,'<h4>$1</h4>').replace(/^## (.*)$/gm,'<h3>$1</h3>').replace(/^# (.*)$/gm,'<h2>$1</h2>').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
+ .replace(/^\s*[-•*] (.*)$/gm,'<li>$1</li>').replace(/(<li>[\s\S]*?<\/li>\n?)+/g,m=>'<ul>'+m+'</ul>').replace(/\[(\d+)\]/g,'<a class="cite" href="#ev-$1" title="evidence $1">[$1]</a>').replace(/\n{2,}/g,'</p><p>').replace(/\n/g,'<br>');return '<p>'+h+'</p>';}
+$('#btn-ask').addEventListener('click',ask);$('#question').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))ask();});
+async function ask(){const q=$('#question').value.trim();if(!q)return;const btn=$('#btn-ask');busy(btn,true,'Asking…');$('#answer').innerHTML='<span class="small">Retrieving evidence…</span>';$('#evidence').hidden=true;
+ try{const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})});if(r.status===401){location.href='/login?next='+encodeURIComponent(location.pathname+location.search);return;}if(!r.ok)throw new Error('HTTP '+r.status);
+  const reader=r.body.getReader();const dec=new TextDecoder();let buf='',text='',head=false;
+  while(true){const {value,done}=await reader.read();if(done)break;const chunk=dec.decode(value,{stream:true});if(!head){buf+=chunk;const i=buf.indexOf('\n---\n');if(i<0)continue;const h=JSON.parse(buf.slice(0,i));showEvidence(h.evidence||[]);text=buf.slice(i+5);head=true;}else{text+=chunk;}$('#answer').innerHTML='<div translate="no">'+md(text)+'</div>';}
+  if(!head){$('#answer').innerHTML='<div translate="no">'+md(buf)+'</div>';}announce('Answer ready');}catch(e){$('#answer').innerHTML='<span class="small">'+esc(window.t('Request failed: {error}',{error:e.message}))+'</span>';}busy(btn,false);}
+function showEvidence(ev){$('#evidence').hidden=!ev.length;$('#evidence-list').innerHTML=ev.map((e,i)=>`<li id="ev-${i+1}"><a translate="no" href="${esc(e.url||'#')}" target="_blank" rel="noopener">${esc(e.one_liner||e.title)}</a> <span class="small">${esc((e.tickers||[]).join(','))} · ${esc(e.source_name||'')} · ${esc(String(e.published||'').slice(0,16))}</span></li>`).join('');}
+$('#answer').addEventListener('click',e=>{const a=e.target.closest('a.cite');if(!a)return;e.preventDefault();const li=document.getElementById(a.getAttribute('href').slice(1));if(!li)return;const det=$('#evidence');det.hidden=false;det.open=true;
+ $$('#evidence-list li.hl').forEach(x=>x.classList.remove('hl'));li.classList.add('hl');li.setAttribute('tabindex','-1');li.scrollIntoView({behavior:'smooth',block:'center'});li.focus({preventScroll:true});announce('Evidence '+a.textContent);});
+// ---------- calendar (7 days) and brief (title from the server text)
+async function loadCalendar(){try{const d=await fetchJSON('/api/calendar?days=7','calendar');const by={};(d.rows||[]).forEach(r=>{(by[r.date]=by[r.date]||[]).push(r);});const dates=Object.keys(by).sort();$('#cal-note').textContent=window.t('{count} items',{count:(d.rows||[]).length});
+  const fmtD=s=>{const x=new Date(s+'T12:00:00');return x.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'})+(s===d.today?window.t(' · today'):'');};
+  if(!dates.length){setPanel('#cal-panel','empty','no calendar entries yet (FRED key / first poll pending)');$('#calendar').innerHTML='';return;}setPanel('#cal-panel','fresh');
+  $('#calendar').innerHTML=dates.map(x=>`<div class="d">${esc(fmtD(x))}</div>`+by[x].map(r=>{const tg=!!r.ticker&&state.holdings.includes(String(r.ticker).toUpperCase());return `<div class="r imp${r.importance||1}${tg?' target':''}"><span class="tm">${esc(r.time_et||'')}</span><span>${'★'.repeat(Math.max(1,Math.min(3,r.importance||1)))} ${tg?'<b>'+esc(r.name)+'</b>':'<span translate="no">'+esc(r.name)+'</span>'}</span></div>`;}).join('')).join('');}
+ catch(e){if(!e.stale)setPanel('#cal-panel','error',window.t('failed to load: {error}',{error:e.message}),loadCalendar);}}
+function renderBrief(b){const text=(b&&b.text)||'';if(!text){$('#brief-title').textContent='Brief';$('#brief-date').textContent='';$('#brief-text').innerHTML='';setPanel('#brief-panel','empty','no brief yet · click ☼ Rebuild');return;}
+ const m=/^#\s+(.+?)\s*$/m.exec(text);let title='Brief',sub='';if(m){const parts=m[1].split(/\s+-\s+/);title=parts[0].trim()||'Brief';sub=parts.slice(1).join(' - ');}
+ $('#brief-title').setAttribute('translate',m?'no':'yes');$('#brief-title').textContent=title;$('#brief-date').textContent=sub||(b.date||'');$('#brief-text').innerHTML=mdLite(m?text.replace(m[0],''):text);setPanel('#brief-panel','fresh');}
+async function loadBrief(){try{renderBrief(await fetchJSON('/api/brief','brief'));}catch(e){if(!e.stale)setPanel('#brief-panel','error',window.t('failed to load: {error}',{error:e.message}),loadBrief);}}
+$('#btn-brief').addEventListener('click',async()=>{const b=$('#btn-brief');busy(b,true,'Building…');setPanel('#brief-panel','loading','rebuilding…');
+ try{const r=await postJSON('/api/brief',{});renderBrief({text:r.text,date:'just now'});Toast.ok('Brief rebuilt');}catch(e){setPanel('#brief-panel','error',window.t('rebuild failed: {error}',{error:e.message}),loadBrief);Toast.bad('Brief failed');}busy(b,false);});
+// ---------- live feed. Focus preset: server filter=holdings (events on target-list names, one per story), then client-side
+// direct target name (holding_tickers non-empty) + level warning/critical + unread. Other presets map 1:1 to /api/events?filter=.
+function passesFocus(e){return state.filter!=='focus'||((e.holding_tickers||[]).length>0&&(e.alert_level==='warning'||e.alert_level==='critical')&&!e.read);}
+function feedParams(extra){const p=new URLSearchParams({filter:state.filter==='focus'?'holdings':state.filter,hours:state.hours,limit:LIMIT});if(state.ticker)p.set('ticker',state.ticker);if(state.q)p.set('q',state.q);if(state.all)p.set('all_items','true');if(!state.copies)p.set('collapse','true');
+ Object.entries(extra||{}).forEach(([k,v])=>{if(v!=null&&v!=='')p.set(k,String(v));});return p;}
+function evCard(e,isNew){const d=DIR[e.direction]||DIR[0];const lvl=e.alert_level||'';const tg=new Set(e.holding_tickers||[]);
+ const tk=(e.tickers||[]).map(t=>`<span class="${tg.has(t)?'target':''}"${tg.has(t)?' title="target-list name"':''}>${esc(t)}</span>`).join('')+(e.tickers_rt&&e.tickers_rt.length?`<span class="rt">↳ ${esc(e.tickers_rt.slice(0,6).join(' '))}${e.tickers_rt.length>6?' …':''}</span>`:'');
+ const line=e.one_liner||(e.summary||'').slice(0,220);const act=e.action&&e.action!=='none'?`<span class="act ${e.direction<0?'neg':''}">${esc(window.t(e.action))}</span>`:'';const st=e.story;
+ const story=st&&st.n_events>1?`<span class="chip sm" title="${st.n_events} copies from ${st.n_sources} outlets · ${st.n_independent} independent source famil${st.n_independent===1?'y':'ies'} · story status ${esc(st.status||'active')} · scored once per story">×${st.n_events}${st.status&&st.status!=='active'?' '+esc(st.status):''}</span>`:'';
+ const im=e.impacts||[];const dir=im.filter(i=>i.relation==='direct');const rt=im.filter(i=>i.relation==='readthrough');const edges=e.readthrough||[];const themes=[...new Set(edges.map(x=>x.via_theme))].filter(Boolean).slice(0,2).join(', ');
+ const contrib=(dir.length||rt.length||e.needs_review)?`<div class="contrib">${dir.map(i=>`<span title="direct contribution = direction/2 × materiality × confidence × entity confidence">${esc(i.ticker)} ${i.impact>=0?'+':''}${i.impact.toFixed(2)}</span>`).join('')}${rt.length?`<span title="${esc(edges.slice(0,8).map(x=>x.ticker+': '+(x.causal_edge||'')+' → '+(x.affected_kpi||'')+' (exposure '+(x.exposure_weight||0).toFixed(2)+')').join('\n'))}">↳ ${rt.length} read-through via ${esc(themes||'value chain')} · ${rt[0].impact>=0?'+':''}${rt[0].impact.toFixed(2)} each</span>`:''}${e.needs_review?`<span class="lvl warning" title="rule-engine fan-out of ${edges.length} names exceeds the cap; read-through withheld (scores zero) until the LLM or an analyst confirms the edges">review · fan-out ${edges.length}</span>`:''}</div>`:'';
+ const lineage=e.classifier==='human'?`<span title="analyst override${e.human_override&&e.human_override.by?' by '+esc(e.human_override.by):''}">✎</span>`:e.llm===1?`<span title="LLM-classified: ${esc(e.provider||'provider unknown')} ${esc(e.model||'')}${e.prompt_version?' · '+esc(e.prompt_version):''}">✦</span>`:`<span title="rule-engine classification${e.rules_version?' · '+esc(e.rules_version):''}">§</span>`;
+ return `<article class="ev ${lvl}${e.read?' read':''}${isNew?' new':''}" data-id="${esc(e.id)}" data-story="${esc(e.story_id||'')}"><div class="meta">${isNew?'<span class="chip sm on">new</span>':''}<b>${esc((e.published_et||'').slice(11))}</b><span>${esc(e.age||'')}</span><span translate="no">${esc(e.source_name||'')}</span><span>${esc(window.t(e.event_type||''))}</span>${Badge(lvl)}<span class="dir ${d[1]}">${d[0]}</span><span class="mat" title="${esc(window.t('materiality {value}',{value:e.materiality}))}"><i style="width:${Math.round((e.materiality||0)*100)}%"></i></span>${story}${act}${lineage}${e.read?'':`<button type="button" class="chip btn sm" data-read="${esc(e.id)}" aria-label="Mark this event read">✓ read</button>`}</div>
+ <a class="title" translate="no" href="${esc(e.url||'#')}" target="_blank" rel="noopener">${esc(e.title)}</a>${line?`<div class="line" translate="no">${esc(line)}</div>`:''}<div class="tk">${tk}</div>${contrib}</article>`;}
+function feedCount(extra){$('#feed-count').textContent=window.t('{count} events{focus}{asof}{extra}',{count:state.total,focus:state.filter==='focus'?window.t(' in focus'):'',asof:state.asOf?window.t(' · as of {time}',{time:hm(state.asOf)}):'',extra:extra||''});}
+async function loadFeed(more){if(!more){state.offset=0;state.ids=new Set();state.stories=new Map();state.total=0;setPanel('#feed-panel','loading');}else busy($('#feed-more'),true,'Loading…');
+ try{const d=await fetchJSON('/api/events?'+feedParams({offset:state.offset}),'feed');const evs=(d.events||[]).filter(e=>!state.ids.has(e.id)&&passesFocus(e));
+  if(!more){state.asOf=d.as_of;$('#feed-list').innerHTML='';}evs.forEach(e=>{state.ids.add(e.id);if(e.story_id)state.stories.set(e.story_id,e.id);});state.total+=evs.length;
+  $('#feed-list').insertAdjacentHTML('beforeend',evs.map(e=>evCard(e,false)).join(''));
+  state.offset+=d.count;const hasMore=d.count>=LIMIT&&!state.q;$('#feed-more').hidden=!hasMore;$('#feed-more-note').textContent=hasMore?window.t('{count} shown · older items available',{count:state.total}):state.total?window.t('{count} shown · end of the {hours}h window',{count:state.total,hours:state.hours}):'';
+  feedCount();if(state.total)setPanel('#feed-panel','fresh');else setPanel('#feed-panel','empty',state.filter==='focus'?'nothing needs attention: no unread warning/critical events on target-list names in this window':'no events for this filter');}
+ catch(e){if(e.stale)return;if(!more)setPanel('#feed-panel','error',window.t('failed to load: {error}',{error:e.message}),()=>loadFeed(false));else Toast.bad(window.t('Load more failed: {error}',{error:e.message}));}
+ busy($('#feed-more'),false);}
+// incremental refresh (visiblePoll, 60 s): ?since= last as_of minus a lookback; unseen ids are prepended as "new", a fresh copy of a story already shown replaces its card
+async function feedTick(){if(state.q||!state.asOf||document.hidden)return;const since=new Date(new Date(state.asOf).getTime()-TICK_LOOKBACK_H*3600e3).toISOString();
+ try{const d=await fetchJSON('/api/events?'+feedParams({since,offset:0}),'feed-tick');state.asOf=d.as_of;const list=$('#feed-list');let n=0;
+  (d.events||[]).slice().reverse().forEach(e=>{if(state.ids.has(e.id)||!passesFocus(e))return;const oldId=!state.copies&&e.story_id?state.stories.get(e.story_id):null;const old=oldId?list.querySelector(`.ev[data-id="${CSS.escape(oldId)}"]`):null;
+   state.ids.add(e.id);if(e.story_id)state.stories.set(e.story_id,e.id);if(old){old.outerHTML=evCard(e,false);}else{list.insertAdjacentHTML('afterbegin',evCard(e,true));state.total++;n++;}});
+  if(n){feedCount(window.t(' · {count} new',{count:n}));announce(window.t('{count} new events in the live feed',{count:n}));setPanel('#feed-panel','fresh');}else feedCount();}catch(e){}}
+function markRead(ids){ids.forEach(id=>{const c=$('#feed-list').querySelector(`.ev[data-id="${CSS.escape(id)}"]`);if(c){c.classList.add('read');const b=c.querySelector('[data-read]');if(b)b.remove();}});}
+function setTicker(t){state.ticker=t||null;if(t&&state.filter==='focus'){state.filter='all';syncChips();}$('#ticker-filter').hidden=!t;$('#tf').textContent=t||'';$$('#impact-panel tr.row').forEach(r=>r.classList.toggle('sel',r.dataset.t===t));syncQS();loadFeed(false);if(t)announce(window.t('Feed filtered by {ticker}',{ticker:t}));}
+$$('#feed-panel [data-f]').forEach(c=>c.addEventListener('click',()=>{state.filter=c.dataset.f;syncChips();syncQS();loadFeed(false);}));
+let qt;$('#q').addEventListener('input',e=>{clearTimeout(qt);qt=setTimeout(()=>{state.q=e.target.value.trim();syncQS();loadFeed(false);},350);});
+$('#hours').addEventListener('change',e=>{state.hours=+e.target.value;syncQS();loadFeed(false);});$('#allitems').addEventListener('change',e=>{state.all=e.target.checked;loadFeed(false);});$('#copies').addEventListener('change',e=>{state.copies=e.target.checked;loadFeed(false);});
+$('#tf-clear').addEventListener('click',e=>{e.preventDefault();setTicker(null);});$('#feed-more').addEventListener('click',()=>loadFeed(true));
+$('#feed-list').addEventListener('click',async e=>{const b=e.target.closest('[data-read]');if(!b)return;busy(b,true,'…');try{await postJSON(`/api/events/${encodeURIComponent(b.dataset.read)}/read`,{});markRead([b.dataset.read]);loadActions();}catch(err){Toast.bad(window.t('Failed: {error}',{error:err.message}));busy(b,false);}});
+// ---------- boot + refresh (60 s, paused while the tab is hidden; calendar and brief every 10 min)
+function refreshAll(full){loadStatus();loadActions();loadMovers();if(full)loadFeed(false);else feedTick();}
+const phoneChanged=()=>{state.arShown=5;state.impactExpanded=false;if(state.A){renderActions();updateImpactLimit();}};if(PHONE_MQ.addEventListener)PHONE_MQ.addEventListener('change',phoneChanged);else PHONE_MQ.addListener(phoneChanged);
+syncChips();$('#ticker-filter').hidden=!state.ticker;$('#tf').textContent=state.ticker||'';PANELS.concat(['#cal-panel','#brief-panel','#src-panel']).forEach(p=>setPanel(p,'loading'));
+loadStatus();loadActions();loadMovers();loadFeed(false);loadCalendar();loadBrief();
+visiblePoll(()=>refreshAll(false),60000);visiblePoll(()=>{loadCalendar();loadBrief();},600000);
+// Language changes redraw cached UI only; no polling or research request is triggered.
+document.addEventListener('languagechange',()=>{hdr();if(state.A){renderActions();renderImpact();renderCatalysts();renderEvidence();renderHealth();}feedCount();});
+</script>
+</body>
+</html>

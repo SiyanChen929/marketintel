@@ -1,0 +1,8 @@
+# Extra tickers monitored on top of the ai_semi_intel universe. Aliases drive headline matching (case-sensitive
+# proper nouns); segment lets value-chain themes read through to the name. Edit freely; the poller picks changes up
+# on its next cycle. Remove an entry to stop tracking it.
+tickers:
+  AAPL: {name: Apple Inc., aliases: [Apple, iPhone, Tim Cook], segment: Watchlist, description: Edge-AI and smartphone demand read-through (QCOM, SWKS, QRVO, TSM)}
+  TSLA: {name: "Tesla, Inc.", aliases: [Tesla, Elon Musk, Dojo], segment: Watchlist, description: AI capex and xAI adjacency}
+  "000660.KS": {name: SK hynix Inc., aliases: [SK hynix, SK Hynix], segment: Memory & Storage, description: HBM leader (KRX listing; prices during Korea hours)}
+  "005930.KS": {name: Samsung Electronics Co., aliases: [Samsung Electronics, Samsung Foundry], segment: Memory & Storage, description: DRAM/NAND/foundry competitor (KRX listing)}

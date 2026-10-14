@@ -1,0 +1,878 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Market Intel · Platform</title>
+<link rel="stylesheet" href="/static/base.css"><script src="/static/base.js"></script>
+<link rel="stylesheet" href="/static/platform-performance.css">
+</head>
+<body class="pf">
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="top"><h1>Market Intel</h1><span class="sub">platform console · multi-strategy research</span><nav class="tabs" id="nav"></nav><div class="chips hdr" id="hdr"></div><button type="button" class="chip btn" id="btn-theme" aria-pressed="false" aria-label="Switch theme">◐</button></header>
+<main class="g2" id="main-content">
+ <div class="wide chips"><a class="chip btn" href="/rebalances">股票调仓历史 →</a><span class="small">按日期查看目标组合、权重变化与模拟成交记录</span></div>
+ <section class="panel wide mx-workbench" aria-labelledby="mx-title">
+  <div class="mx-intro"><div><p class="mx-eyebrow">RESEARCH / MULTI-STRATEGY</p><h2 id="mx-title">Measure risk. Allocate capital.</h2><p>同时查看日历收益、真实持仓活动与资金占用，按历史可用风险配置策略。</p></div><div class="mx-count" id="mx-coverage">读取策略…</div></div>
+  <div class="mx-actions"><label class="mx-method">配置方法<select id="mx-method" aria-describedby="mx-policy-note"><option value="activity_risk_budget">Activity risk budget · 活动风险预算</option><option value="manual">Manual capital · 手动资金情景</option></select></label><button type="submit" form="mx-form" class="chip btn mx-primary" id="mx-calculate">Calculate joint performance</button><button type="button" class="chip btn" id="mx-equal">Equal capital · 等额参考</button><button type="button" class="chip btn" id="mx-usd">USD strategies only</button><button type="button" class="chip btn" id="mx-import-open">Import strategy</button><button type="button" class="chip btn" id="mx-refresh">Refresh catalog</button></div>
+  <div class="mx-scenario" id="mx-policy-note">风险预算使用此前 36 个月数据，季度调整。持仓期风险、最差损失与最低风险尺度共同约束资金；估计不足和触及上限的预算保留现金。</div>
+  <details class="mx-details" id="mx-policy-explanation"><summary>Allocation policy · 资金分配规则</summary><p class="small">每次决策只读取此前 36 个月。风险尺度取 max（日历收益标准差，活动期收益标准差，活动期最差损失 ÷ 3，0.30%）。日频策略至少 20 个活动日；事件策略至少 12 个事件日期。风险倒数分配资金，单策略上限 40%、事件策略上限 10%，剩余资金为现金。该规则未优化历史 Sharpe；活动期统计不年化。源策略仍使用各自研究逻辑。</p></details>
+  <details class="mx-details" id="mx-config"><summary>Strategy allocation &amp; versions · 调整策略、版本与资金配置</summary>
+  <div id="mx-strategies" class="mx-strategies"></div>
+  <form id="mx-form" class="mx-controls">
+   <label>组合口径<select id="mx-currency"><option value="constant_fx">Fixed FX · 固定汇率研究情景</option><option value="native">Native currency · 同币种</option></select></label>
+   <label>资金调整频率<select id="mx-rebalance" disabled><option value="quarterly">Quarterly · 季度风险预算调整</option><option value="none">Initial allocation · 各账户自然漂移</option><option value="monthly">Monthly rebalance · 月末恢复比例</option></select></label>
+   <label>账户调配成本 · bps<input type="number" id="mx-cost" min="0" max="1000" step="0.1" value="0"></label>
+   <label>起始完整月份<input type="month" id="mx-start" aria-label="Start month" disabled aria-describedby="mx-policy-note"></label>
+   <label>结束完整月份<input type="month" id="mx-end" aria-label="End month"></label>
+  </form>
+  </details>
+  <div class="mx-allocation" id="mx-allocation"></div>
+  <p class="small" id="mx-missing"></p>
+  <p id="mx-status" role="status" aria-live="polite"></p>
+  <div class="mx-error" id="mx-error" role="alert" hidden></div>
+  <section id="mx-activity" class="mx-activity" aria-labelledby="mx-activity-title" hidden>
+   <div class="mx-result-head"><div><p class="mx-eyebrow">MEASUREMENT / BEFORE ALLOCATION</p><h3 id="mx-activity-title">Activity &amp; capital use · 持仓与资金效率</h3><p id="mx-activity-period" class="small"></p></div></div>
+   <p class="small">日历收益包含策略现金期。活动期统计仅使用账本证明的持仓日或事件日期，单位 bps（1 bp = 0.01%），不年化。零收益持仓日仍计为活动。</p>
+   <div id="mx-activity-table"></div>
+   <div id="mx-activity-clocks" class="mx-activity-clocks small"></div>
+   <div class="mx-scenario">资金复用尚未建模。持仓名义金额、策略资本和保证金分别展示；缺少历史抵押品、融资与同时开仓约束时，空闲资金不视为可随时转用。</div>
+   <details class="mx-details"><summary>Measurement clocks &amp; evidence · 时点与证据</summary><div id="mx-activity-evidence"></div></details>
+  </section>
+  <div id="mx-results" hidden>
+   <div class="mx-result-head"><div><h3>Combined performance</h3><p id="mx-period" class="small"></p></div><button type="button" class="chip btn" id="mx-export">Export evidence · JSON</button></div>
+   <div id="mx-assumption" class="mx-scenario"></div>
+   <div id="mx-metrics" class="mx-metrics"></div>
+   <p id="mx-interpretation" class="mx-scenario"></p>
+   <section id="mx-policy-result" hidden><h3>Risk budget decisions · 风险预算结果</h3><p id="mx-evaluation-scope" class="small"></p><div id="mx-weights"></div><h3>Same-window comparison · 相同评估期</h3><div id="mx-baselines"></div><details class="mx-details"><summary>Quarterly decisions · 训练范围与资金调整</summary><div id="mx-decisions"></div></details></section>
+   <section id="mx-exposure" class="mx-exposure" hidden aria-labelledby="mx-exposure-title">
+    <div class="mx-result-head"><div><p class="mx-eyebrow">EXPOSURE / SENSITIVITY</p><h3 id="mx-exposure-title">Increase exposure · 增加敞口是否值得</h3></div><div class="mx-actions"><button type="button" id="mx-exposure-run" class="chip btn mx-primary">Compare exposure scenarios</button><button type="button" id="mx-exposure-export" class="chip btn" disabled>Export comparison</button></div></div>
+    <p class="small">比较两种调整：用组合剩余现金增加策略资金；保持资金配置、放大原有仓位。所有情景使用当前相同评估期，Vol 仓位倍数保持 1×。倍率按每日／事件收益重算，交易窗口保持源定义。</p>
+    <p id="mx-exposure-status" role="status" class="small">运行后查看收益、回撤、风险贡献与 MSCI 事件成本敏感性。</p>
+    <div id="mx-exposure-output" hidden>
+     <p id="mx-exposure-scope" class="mx-scenario"></p>
+     <h4>Capital from cash · 从剩余现金增加资金</h4><p class="small">各决策期相对原目标最多增加 10 个百分点（不逐季累计），或按所选三项原比例分配剩余现金。仅使用未分配现金；这是对原资金上限的显式情景修改。</p><div id="mx-capital-grid"></div>
+     <h4>Position multipliers · 原仓位倍数</h4><p class="small">资金账户与现金比例沿用原规则。新增融资、借券、冲击成本及追加保证金尚未计入；结果表示理论敏感性，无法证明可执行杠杆。</p><div id="mx-position-grid"></div>
+     <div id="mx-event-sensitivity" hidden><h4>MSCI · 事件期与成本</h4><p id="mx-event-scope" class="small"></p><div id="mx-event-grid"></div></div>
+     <details class="mx-details"><summary>Exposure assumptions &amp; evidence</summary><div id="mx-exposure-evidence"></div></details>
+    </div>
+   </section>
+   <div class="mx-chart-head"><h3>Growth of 1 unit</h3><div id="mx-legend"></div></div>
+   <div id="mx-chart" class="mx-chart"></div>
+   <p class="small">共同区间重新归一。Joint 为配置情景；细线为各策略独立净值，按相同月份计算。</p>
+   <h3>Drawdown · 月末</h3><div id="mx-drawdown" class="mx-chart mx-dd"></div>
+   <div class="mx-split"><section><h3>Return &amp; risk contribution</h3><div id="mx-attribution"></div><p class="small">收益贡献为初始组合资金的百分点。风险贡献为策略当月 P&amp;L 收益与组合收益的协方差 / 组合方差；可为负。</p></section><section><h3>Return correlation</h3><div id="mx-correlation"></div><p class="small">相同完整月份，Pearson 相关性。恒定序列显示 N/A。</p></section></div>
+   <details class="mx-details"><summary>Monthly returns · 月度收益与净值</summary><div id="mx-monthly"></div></details>
+   <details class="mx-details"><summary>Evidence, assumptions &amp; research limits</summary><div id="mx-evidence"></div></details>
+  </div>
+ </section>
+ <details class="mx-operations wide"><summary>Operations &amp; existing Stock Select integration <span class="small">Paper ledger · frozen inputs · LLM usage · execution readiness</span></summary><div class="g2">
+ <div id="banner" style="grid-column:1/-1">
+  <div class="pf-strip" role="status" aria-label="platform execution status">
+   <span class="pf-tag">NOT VALIDATED</span><span class="pf-tag">PAPER ONLY</span><span class="pf-tag">NO LIVE BROKER</span>
+   <span class="pf-stripd" id="strip-detail">reading the platform contract…</span>
+  </div>
+ </div>
+ <section class="panel wide" id="ans-panel">
+  <div class="head"><h2>Where this stands</h2><span class="small">rows marked <b>from API</b> are read from the platform response; rows marked <b>engine limit</b> are documented constraints of the paper engine, not live readings. This console is a research view, not advice, and it cannot reach a broker.</span></div>
+  <dl class="pf-ans" id="answers"></dl>
+  <div id="blockers"></div>
+ </section>
+
+ <section class="panel wide" id="llm-panel">
+  <div class="head"><h2>LLM usage &amp; budget</h2><span class="small">what Market Intel itself spends on LLM API calls — read-only, from the usage ledger</span></div>
+  <div id="llm-body"></div>
+ </section>
+
+ <section class="panel wide" id="paper-panel">
+  <div class="head"><h2>Paper ledger</h2><span class="small">virtual PAPER/SHADOW sessions · virtual cash and virtual positions in an append-only ledger · no broker connection exists</span></div>
+  <div class="chips" id="paper-ctl">
+   <button type="button" class="chip btn" id="btn-step" disabled>Step</button>
+   <button type="button" class="chip btn" id="btn-kill" disabled>Kill switch</button>
+   <span class="small" id="gate-note"></span>
+  </div>
+  <div class="pf-alert" id="pf-err" role="alert"></div>
+  <div class="pf-alert2" id="pf-pending" role="status" hidden></div>
+  <p class="note pf-ro" id="ro-note" hidden></p>
+  <p class="note pf-wrap" id="engine-note"><b>Paper engine limits.</b> Execution is <b>intraday only</b>: an order or a mark that crosses a UTC session date fails closed until trading-calendar, dividend, split, symbol-change and financing accounting are connected. Short selling and margin are refused. These are documented engine limits, not values read from the API.</p>
+  <p class="small pf-wrap" id="idem-note"></p>
+  <form class="form pf-start" id="start-form" aria-label="Start a virtual paper session">
+   <label>Starting cash <input type="text" id="f-cash" value="100000" inputmode="decimal" autocomplete="off" size="10"></label>
+   <label>Currency <input type="text" id="f-ccy" value="USD" size="5" readonly aria-readonly="true" aria-describedby="ccy-why"></label>
+   <label>Max gross leverage <input type="text" id="f-lev" value="1" inputmode="decimal" autocomplete="off" size="5"></label>
+   <label>Max quote age (s) <input type="number" id="f-age" value="300" min="1" step="1"></label>
+   <label class="pf-chk"><input type="checkbox" id="f-short" disabled aria-describedby="borrow-why"> allow short <span class="pf-lock">refused</span></label>
+   <label class="pf-chk"><input type="checkbox" id="f-margin" disabled aria-describedby="borrow-why"> allow margin <span class="pf-lock">refused</span></label>
+   <button type="submit" class="chip btn" id="btn-start" disabled>Start paper session</button>
+   <p class="small pf-wrap pf-why" id="ccy-why">Currency is fixed to <code>USD</code>: quote-currency and point-in-time FX conversion are not implemented, and the API refuses any other currency. Every session is submitted as <code>USD</code>.</p>
+   <p class="small pf-wrap pf-why" id="borrow-why">The platform API refuses <code>allow_short=true</code> and <code>allow_margin=true</code> until borrow/locate, financing, collateral and dividend/corporate-action accounting are implemented. Every session is submitted with both set to <code>false</code>.</p>
+  </form>
+  <div id="sess-list"></div>
+  <div id="step-result"></div>
+  <div id="sess-detail"></div>
+ </section>
+
+ <section class="panel wide" id="run-panel">
+  <div class="head"><h2>Frozen run &amp; shared data plane</h2><span class="small">the immutable run context the platform would execute against, its lineage, and what the registry and dataset catalog actually hold</span></div>
+  <div id="run-body"></div>
+ </section>
+
+ <section class="panel wide" id="risk-panel">
+  <div class="head"><h2>Risk &amp; attribution</h2><span class="small">only what the platform risk interface returns — an empty tile means the number does not exist yet, never a substituted value</span></div>
+  <div id="risk-body"></div>
+ </section>
+
+ <section class="panel" id="strat-panel">
+  <div class="head"><h2>Strategy registry</h2><span class="small">planned strategies and whether an adapter is actually installed</span></div>
+  <div id="strat-body"></div>
+ </section>
+
+ <section class="panel" id="runs-panel">
+  <div class="head"><h2>Registered runs</h2><span class="small">most recent first, from the platform run registry</span></div>
+  <div id="runs-body"></div>
+ </section>
+</div></details>
+</main>
+
+<dialog id="mx-import-dialog" class="mx-dialog" aria-labelledby="mx-import-title">
+ <h2 id="mx-import-title">Import a strategy result</h2><p class="small">上传月度净收益 JSON，或两列 CSV：<code>month,return</code>。0.01 表示 1%。完整月份须连续；元数据和原始文件指纹随结果保存。</p>
+ <form id="mx-import-form">
+  <label>File · JSON / CSV<input type="file" id="mx-file" accept=".json,.csv" required></label>
+  <div class="mx-import-grid">
+   <label>Strategy ID<input id="mx-in-id" placeholder="my_strategy" pattern="[a-z][a-z0-9_]{1,63}"></label><label>Display name<input id="mx-in-name" placeholder="My Strategy"></label>
+   <label>Variant<input id="mx-in-variant" placeholder="Frozen primary v1"></label><label>Run ID<input id="mx-in-run" placeholder="run_20260904"></label>
+   <label>Currency<input id="mx-in-currency" value="USD" maxlength="3"></label><label>Asset class<input id="mx-in-asset" placeholder="equity / future / option"></label>
+   <label>Calendar<input id="mx-in-calendar" placeholder="NYSE sessions, complete months"></label><label>Sample<select id="mx-in-sample"><option value="historical_research">Historical research</option><option value="paper">Source-declared paper</option><option value="live">Source-declared live</option></select></label>
+  </div>
+  <label>Cost assumptions<input id="mx-in-costs" placeholder="Transaction costs, borrow, financing included / missing"></label>
+  <label>Signal &amp; execution clock<input id="mx-in-clock" placeholder="Signal at close t, fill at open t+1"></label>
+  <label>Return construction<input id="mx-in-construction" placeholder="Time-weighted NAV returns, external flows removed"></label>
+  <label>Research limitations<textarea id="mx-in-limits" rows="2" placeholder="PIT data, execution, selection and validation gaps"></textarea></label>
+  <p class="small">JSON 自带上述字段。CSV 使用表单字段。Paper / live 标签来自源文件，平台未独立认证。</p>
+  <p id="mx-import-status" role="status"></p>
+  <p id="mx-import-access" class="small" hidden>当前会话可读取和计算。导入需要现有 QuantOps / Admin 账号：<a href="/login?next=/platform">Sign in</a>。</p>
+  <div class="mx-actions"><button type="submit" id="mx-import-submit" class="chip btn mx-primary">Import frozen result</button><button type="button" id="mx-template" class="chip btn">JSON template</button><button type="button" id="mx-import-close" class="chip btn">Close</button></div>
+ </form>
+</dialog>
+<script src="/static/platform-performance.js" defer></script>
+
+<dialog class="pf-dlg" id="kill-dlg" aria-labelledby="kill-t">
+ <form id="kill-form">
+  <h2 id="kill-t">Activate the paper kill switch</h2>
+  <p class="small">This stops further virtual orders on the selected paper session. It is recorded in the append-only ledger and cannot be undone from this page. It has no effect outside the simulation.</p>
+  <label class="pf-lab" for="kill-reason">Reason (required)</label>
+  <textarea id="kill-reason" rows="3" required aria-describedby="kill-t" placeholder="why the session is being stopped"></textarea>
+  <div class="chips pf-dlgacts">
+   <button type="button" class="chip btn" id="kill-cancel">Cancel</button>
+   <button type="submit" class="chip btn pf-danger" id="kill-confirm">Activate kill switch</button>
+  </div>
+ </form>
+</dialog>
+
+<script>
+renderNav('/platform');themeInit();
+const tr=(s,v={})=>typeof globalThis.t==='function'?globalThis.t(s,v):s.replace(/\{(\w+)\}/g,(_,k)=>v[k]??'{'+k+'}');
+// ---- the eight versioned platform endpoints. Nothing else on this page talks to the API.
+// plus the read-only LLM usage ledger (/api/llm/usage), which is the only non-v2 endpoint this page reads.
+const API={ov:'/api/v2/platform/overview',st:'/api/v2/platform/strategies',rn:'/api/v2/platform/runs',pa:'/api/v2/platform/paper',rk:'/api/v2/platform/risk',ps:'/api/v2/platform/paper/sessions',lu:'/api/llm/usage'};
+const stepURL=id=>API.pa+'/'+encodeURIComponent(id)+'/step';
+const killURL=id=>API.pa+'/'+encodeURIComponent(id)+'/kill-switch';
+// ---- Idempotency-Key: one key per (endpoint, canonical body), reused while that exact request keeps failing.
+// A lost or refused response therefore retries the SAME operation instead of advancing a second step; the key is
+// retired only once the backend has accepted it, so the next business action gets a fresh one.
+const OPKEY={};
+function canonicalBody(b){const norm=v=>{if(v===null||typeof v!=='object')return v;if(Array.isArray(v))return v.map(norm);
+  const o={};Object.keys(v).sort().forEach(k=>{o[k]=norm(v[k]);});return o;};
+ return JSON.stringify(norm(b==null?{}:b));}
+function keySlot(url,body){return url+'\n'+canonicalBody(body);}
+// server contract: ^[A-Za-z0-9][A-Za-z0-9._~:/-]{0,127}$
+function freshKey(kind){const r=(window.crypto&&typeof window.crypto.randomUUID==='function')?window.crypto.randomUUID()
+  :(Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));
+ return (kind+'-'+r).replace(/[^A-Za-z0-9._~:/-]/g,'-').replace(/^[^A-Za-z0-9]+/,'').slice(0,128);}
+function operationKey(kind,url,body){const slot=keySlot(url,body);let e=OPKEY[slot];
+ if(!e){e=OPKEY[slot]={kind:kind,key:freshKey(kind),attempts:0};}
+ e.attempts++;return e;}
+function retireKey(url,body){delete OPKEY[keySlot(url,body)];}
+let lastOp=null;
+// The backend answers 202 with mutation_state=committed_checkpoint_pending when the local PAPER ledger is
+// already committed but the independent witness is not yet in step. It deliberately does not cache that
+// response, so the SAME key must go back in to repair the witness. Retiring it here would make the repair
+// impossible and would invite a second, duplicate business mutation.
+const PENDING_STATE='committed_checkpoint_pending';
+const COMMITTED_STATE='committed';
+function isPending(r){return !!r&&r.mutation_state===PENDING_STATE;}
+function isCommitted(r){return !!r&&r.mutation_state===COMMITTED_STATE;}
+async function platformPost(url,body,kind){
+ const e=operationKey(kind,url,body);
+ lastOp={kind:kind,key:e.key,attempts:e.attempts,outcome:'in flight'};renderIdem();
+ let r;
+ try{r=await postJSON(url,body,{headers:{'Content-Type':'application/json','Idempotency-Key':e.key}});}
+ catch(err){lastOp.outcome='refused — a retry of this same request reuses the key';renderIdem();throw err;}
+ // Fail closed: ONLY the exact committed state retires the key. Pending, missing or any state this page does
+ // not recognise keeps it, so a later attempt at the same request can never become a second mutation.
+ if(!isCommitted(r)){
+  lastOp.outcome=isPending(r)?'committed, witness checkpoint pending — the same key is kept to repair the witness'
+   :'unrecognised mutation_state — the key is kept and this is not treated as a completed action';
+  renderIdem();
+  return r;}
+ retireKey(url,body);                                    // only a fully committed mutation retires its key
+ lastOp.outcome='committed — the next action gets a new key';renderIdem();
+ return r;}
+// Paint the status region for the three outcomes and name which one it is. A pending witness is NOT a rejection
+// and NOT a rollback; an unrecognised state is NOT a completed action.
+function mutationOutcome(r,what){
+ const n=$('#pf-pending');
+ if(isCommitted(r)){n.hidden=true;n.innerHTML='';return COMMITTED_STATE;}
+ n.hidden=false;
+ if(isPending(r)){
+  const ck=r.external_checkpoint||{};
+  n.innerHTML='<b>Committed. Independent checkpoint pending.</b> The '+esc(what)+' is already committed to the local PAPER ledger'+
+   ' (mutation_state <code>'+esc(String(r.mutation_state))+'</code>, HTTP 202). It was not rejected and nothing was rolled back. '+
+   'Only the independent witness is out of step. Retrying this same request with the same Idempotency-Key repairs the witness only: '+
+   'it cannot place another order or record another fill.'+(ck.reason?' API reason: '+esc(String(ck.reason))+'.':'');
+  announce('Committed; independent checkpoint pending. Retrying the same request repairs the witness only.');
+  return PENDING_STATE;}
+ const got=r&&r.mutation_state!=null&&r.mutation_state!==''?String(r.mutation_state):'none';
+ n.innerHTML='<b>Unresolved: unrecognised mutation state.</b> The API answered this '+esc(what)+' with <code>mutation_state '+esc(got)+
+  '</code>, which this page does not recognise. It is <b>not</b> reported as completed, and it is not reported as rejected either. '+
+  'The Idempotency-Key is kept, so repeating the same request cannot create a second '+esc(what)+'. '+
+  'Read the paper ledger below to see what is actually recorded before taking any further action.';
+ announce('Unresolved: the mutation state was not recognised. This action is not reported as complete.');
+ return 'unknown';}
+function renderIdem(){const n=$('#idem-note');if(!n)return;
+ n.innerHTML=lastOp?('Last mutation · <code>Idempotency-Key</code> '+esc(cut(lastOp.key,28))+' · attempt '+lastOp.attempts+
+  ' · '+esc(lastOp.outcome)):'Every paper mutation carries an <code>Idempotency-Key</code>. A failed attempt keeps its key so a retry cannot record the same step twice.';}
+const RUNS_Q='?limit=20';
+// honest implementation labels: the API tells us which of the six strategies has code behind it
+const IMPL={reference_adapter:'Reference adapter',adapter_not_installed:'Adapter not installed'};
+// canonical risk metrics map (platform contract): key -> display label
+const METRICS=[['var_99_1d','VaR 99% 1-day'],['var_99_10d','VaR 99% 10-day'],['es_97_5','Expected Shortfall 97.5%'],['tracking_error','Tracking Error']];
+const UNITS={fraction_of_nav:'of NAV',annualized_fraction:'annualized'};
+const PHASE={fills_processed_and_orders_submitted:'Fills were processed and new virtual orders were submitted.',
+ fills_processed:'Open virtual orders were filled. No new order was needed.',
+ orders_submitted:'New virtual orders were submitted. Nothing filled in this step.',
+ no_change:'Nothing changed: the virtual book already matches the frozen target.'};
+let OV=null,STR=null,RNS=null,PAP=null,RSK=null,USG=null,SEL=null,lastOk=null,stale=false,RO=false,hid=0,killFrom=null;
+
+// ---------- small formatting helpers (everything the API returns is rendered verbatim, escaped)
+const tx=v=>v==null||v===''?'—':'<span data-no-i18n>'+esc(String(v))+'</span>';
+const ui=v=>v==null||v===''?'—':esc(tr(String(v)));
+const cut=(s,n)=>{s=String(s==null?'':s);return s.length>n?s.slice(0,n)+'…':s;};
+const yn=v=>v===true?tr('yes'):v===false?tr('no'):'—';
+function errParts(e){const s=String((e&&e.message)||e||'');const i=s.indexOf(' ');const c=s.slice(0,i);
+ return i>0&&c.length===3&&!isNaN(Number(c))?{code:Number(c),detail:s.slice(i+1)}:{code:0,detail:s};}
+function panelMsg(e){const p=errParts(e);return p.code?('request failed (HTTP '+p.code+'): '+p.detail):p.detail;}
+function kv(label,html){return '<div class="pf-kv"><b>'+esc(tr(label))+'</b><span>'+html+'</span></div>';}
+function kvs(rows){return '<div class="pf-kvs">'+rows.join('')+'</div>';}
+
+// ---------- hashes: truncated by default, with Copy and an aria-expanded Show full toggle
+function hashHTML(label,val){
+ if(val==null||val==='')return '<span class="pf-na">—</span>';
+ const s=String(val),id='pfh'+(++hid),sh=cut(s,12);
+ return '<span class="pf-hw"><code class="pf-hash" id="'+id+'" data-full="'+esc(s)+'" data-short="'+esc(sh)+'">'+esc(sh)+'</code>'+
+  '<button type="button" class="chip btn sm" data-copy="'+id+'" aria-label="Copy the '+esc(label)+'">Copy</button>'+
+  '<button type="button" class="chip btn sm" data-toggle="'+id+'" aria-controls="'+id+'" aria-expanded="false" aria-pressed="false" aria-label="Show the full '+esc(label)+'">Show full</button></span>';}
+function fallbackCopy(txt){try{const ta=document.createElement('textarea');ta.value=txt;ta.setAttribute('readonly','');ta.className='pf-off';
+ document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();return ok;}catch(e){return false;}}
+function copyText(txt){return new Promise(res=>{
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(()=>res(true),()=>res(fallbackCopy(txt)));return;}
+ res(fallbackCopy(txt));});}
+function doCopy(txt){copyText(String(txt==null?'':txt)).then(ok=>{
+ if(ok){Toast.ok('Copied');announce('Copied the full value to the clipboard');}
+ else{Toast.bad('Copy failed');announce('Copy failed — select the value and copy it manually');}});}
+function toggleHash(btn){const c=document.getElementById(btn.getAttribute('data-toggle'));if(!c)return;
+ const open=btn.getAttribute('aria-expanded')!=='true';
+ c.textContent=open?c.getAttribute('data-full'):c.getAttribute('data-short');
+ c.classList.toggle('pf-hashfull',open);
+ btn.setAttribute('aria-expanded',open?'true':'false');btn.setAttribute('aria-pressed',open?'true':'false');
+ btn.textContent=open?'Hide':'Show full';announce(open?'Full value shown':'Value truncated');}
+
+// ---------- one table renderer: a real table on wide screens, stacked cards under 576px (no sideways scrolling on a phone)
+function dataTable(caption,cols,rows,cells,emptyTxt){
+ if(!rows||!rows.length)return '<div class="empty">'+esc(tr(emptyTxt||('no '+caption)))+'</div>';
+ const head=cols.map(c=>'<th scope="col">'+esc(tr(c))+'</th>').join('');
+ const body=rows.map(r=>'<tr>'+cells(r).map(v=>'<td>'+v+'</td>').join('')+'</tr>').join('');
+ const stack=rows.map(r=>{const v=cells(r);return '<div class="pf-card">'+cols.map((c,i)=>kv(c,v[i])).join('')+'</div>';}).join('');
+ return '<div class="pf-tbl"><table><caption class="sr-only">'+esc(caption)+'</caption><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>'+
+  '<div class="pf-stack" role="list">'+stack+'</div>';}
+
+// ---------- header chips + status strip
+function hdr(){const cr=OV&&OV.current_run;
+ const chip=cr?('<span class="chip run'+(cr.actionable===true?'':' bad')+'" title="frozen run '+esc(cr.run_id||'')+' · '+esc(cr.validation_status||'')+' · paper only">run '+
+   esc(cut(cr.run_id,28))+(cr.actionable===true?'':' · NOT ACTIONABLE')+'</span>')
+  :'<span class="chip run" title="the platform reports no frozen run context">run: none</span>';
+ const n=((OV&&OV.blockers)||[]).length;
+ $('#hdr').innerHTML=chip+'<span class="chip'+(n?' warnc':'')+'">'+n+' blocker'+(n===1?'':'s')+'</span>'+
+  asOfChip(cr&&cr.as_of,lastOk,stale)+'<button type="button" class="chip btn" data-act="refresh" aria-label="Refresh platform data">↻ Refresh</button>';}
+function renderStrip(){
+ if(!OV){$('#strip-detail').textContent=stale?'platform status could not be read — the three states above are the only claim this page makes':'reading the platform contract…';return;}
+ const n=((OV.blockers)||[]).length;
+ $('#strip-detail').textContent='API status '+String(OV.status||'')+' · validation '+String(OV.validation_status||'')+
+  ' · execution mode '+String(OV.execution_mode||'')+' · broker connections '+String(OV.broker_connections==null?'?':OV.broker_connections)+
+  ' · orders to a broker are not supported'+' · '+n+' blocker'+(n===1?'':'s');}
+
+// ---------- above the fold: the five questions, in plain words, from the API only
+function renderAnswers(){
+ const el=$('#answers');
+ if(!OV){el.innerHTML='';return;}
+ const cr=OV.current_run,li=OV.lineage||{},pp=OV.paper||{},bl=OV.blockers||[],caps=OV.capabilities||{};
+ const rows=[];
+ const noBroker=OV.live_trading_supported===false&&(OV.broker_connections||0)===0;
+ rows.push(['Can the research be used right now?',
+  'No. The platform reports '+tx(OV.status)+' and runs in '+tx(OV.execution_mode)+' mode'+(noBroker?', with no broker connection and no order path out of the simulation':'')+
+  '. '+(cr?(cr.actionable===true?'The frozen run is not flagged NOT ACTIONABLE, but it is still '+ui(cr.validation_status)+'.':'The frozen run is flagged <b>NOT ACTIONABLE</b>.'):'There is no frozen run context to use.')]);
+ rows.push(['What is the frozen run?',
+  cr?('<code>'+esc(cut(cr.run_id,44))+'</code> · strategy '+tx(cr.strategy_id)+' · portfolio '+tx(cr.portfolio_id)+' · as-of '+tx(cr.as_of)+' · status '+ui(cr.status))
+   :'There is <b>no frozen run context</b>. Nothing downstream of it — paper stepping, risk, attribution — can be produced.']);
+ const linTxt=li.complete===true
+  ?('Yes — all required content-addressed roles are bound and verified'+(li.reason?'. '+esc(String(li.reason)):''))
+  :('No — '+esc(String(li.reason||'the API gave no reason')));
+ rows.push(['Is data lineage complete?',
+  linTxt+'. Roles bound: '+tx(li.dataset_version_count)+' of '+((li.required_roles||[]).length)+' required.']);
+ rows.push(['Is paper / shadow running?',
+  tx(pp.active_session_count)+' active of '+tx(pp.session_count)+' virtual session'+(pp.session_count===1?'':'s')+
+  (pp.virtual_broker_only===true?'. Virtual broker only.':'.')+' Paper ledger capability: '+yn(caps.paper_ledger)+'.']);
+ rows.push(['What can the paper engine do?',
+  'It runs <b>intraday only</b>. An order or a mark that crosses a UTC session date <b>fails closed</b> until trading-calendar, dividend, split, '+
+  'symbol-change and financing accounting are connected. Short selling and margin are refused until borrow/locate, financing and collateral '+
+  'accounting exist. These are documented engine limits, not numbers read from the API.','doc']);
+ rows.push(['What is the next blocker?',
+  bl.length?('<b>'+esc(String(bl[0]))+'</b>'+(bl.length>1?' (and '+(bl.length-1)+' more below)':'')):'The API reports no blockers.']);
+ el.innerHTML=rows.map(r=>'<div class="pf-q"><dt>'+esc(tr(r[0]))+
+  '<span class="pf-src'+(r[2]==='doc'?' pf-srcdoc':'')+'">'+(r[2]==='doc'?'engine limit':'from API')+'</span></dt><dd>'+r[1]+'</dd></div>').join('');
+ const bx=$('#blockers');
+ bx.innerHTML=bl.length?('<h3 class="pf-h3">Blockers reported by the API ('+bl.length+')</h3><ul class="pf-list">'+
+   bl.map(b=>'<li data-no-i18n>'+esc(String(b))+'</li>').join('')+'</ul>'):'<p class="small">No blockers reported by the API.</p>';}
+
+// Every required dataset role, one card each: a bound role shows its content-addressed version id (copyable and
+// expandable), a missing role is called MISSING in red. A role is never inferred from a legacy manifest hash.
+function roleGrid(required,versions){
+ if(!required||!required.length)return '<div class="empty">The API reported no required dataset roles.</div>';
+ return '<div class="pf-roles" role="list">'+required.map(r=>{
+  const raw=versions?versions[r]:null;
+  const vid=raw&&typeof raw==='object'?(raw.version_id||raw.dataset_id):raw;
+  return '<div class="pf-role'+(vid?'':' pf-rolebad')+'" role="listitem"><div class="l">'+esc(String(r))+'</div>'+
+   (vid?('<div class="v">'+hashHTML('dataset version id for role '+String(r),vid)+'</div><div class="d">bound to a content-addressed version</div>')
+     :'<div class="v pf-miss">MISSING</div><div class="d">no content-addressed version is bound for this role</div>')+'</div>';}).join('')+'</div>';}
+
+// ---------- frozen run, lineage, registry, shared dataset catalog
+function renderRun(){
+ const el=$('#run-body');
+ if(!OV){el.innerHTML='';return;}
+ const cr=OV.current_run,li=OV.lineage||{},rg=OV.registry||{},sd=OV.shared_data||{};
+ let html='';
+ if(!cr){html+='<div class="empty">The platform reports no frozen run context. Run identity, context hash and lineage cannot be shown.</div>';}
+ else{
+  html+=kvs([kv('run_id','<code class="pf-wrap">'+esc(cr.run_id)+'</code>'),kv('strategy_id',tx(cr.strategy_id)),kv('portfolio_id',tx(cr.portfolio_id)),
+   kv('as_of',tx(cr.as_of)),kv('context_hash',hashHTML('context hash',cr.context_hash)),kv('status',ui(cr.status)),
+   kv('validation_status','<span class="badge na">'+ui(cr.validation_status)+'</span>'),
+   kv('actionable',cr.actionable===true?'<span class="badge pass">true</span>':'<span class="badge fail">NOT ACTIONABLE</span>')]);
+  const rs=cr.not_actionable_reasons||[];
+  if(rs.length)html+='<h3 class="pf-h3">not_actionable_reasons</h3><ul class="pf-list">'+rs.map(r=>'<li data-no-i18n>'+esc(String(r))+'</li>').join('')+'</ul>';}
+ const req=li.required_roles||[],vers=li.versions||{},bound=li.roles||[];
+ html+='<h3 class="pf-h3">Frozen dataset lineage</h3>'+kvs([
+  kv('complete',li.complete===true?'<span class="badge pass">complete</span>':'<span class="badge fail">incomplete</span>'),
+  kv('roles bound',tx(li.dataset_version_count)+' of '+req.length+' required'),
+  kv('input_manifest_hash',hashHTML('dataset input manifest hash',li.input_manifest_hash)),
+  kv('reason','<span class="pf-wrap">'+tx(li.reason)+'</span>')]);
+ html+=roleGrid(req,vers);
+ const extra=bound.filter(r=>req.indexOf(r)<0);
+ if(extra.length)html+='<p class="small pf-wrap">Bound but not required by this contract: '+esc(extra.join(', '))+'.</p>';
+ html+='<p class="small pf-wrap">'+kvs([kv('legacy_data_manifest_hash',hashHTML('legacy data manifest hash',li.legacy_data_manifest_hash)+
+  '<span class="pf-sub">legacy pipeline manifest — not a content-addressed lineage, and it never counts toward completeness above</span>')])+'</p>';
+ html+='<h3 class="pf-h3">Registry</h3><div class="kpis">'+Kpi('Strategies',tx(rg.strategies))+Kpi('Runs',tx(rg.runs))+Kpi('Artifacts',tx(rg.artifacts))+'</div>';
+ const bf=sd.by_finality||{};const bfk=Object.keys(bf);
+ html+='<h3 class="pf-h3">Shared dataset catalog</h3><div class="kpis">'+Kpi('Requests',tx(sd.requests))+Kpi('Versions',tx(sd.versions))+Kpi('Unique payloads',tx(sd.unique_payloads))+
+  Kpi('By finality',bfk.length?esc(bfk.map(k=>k+' '+bf[k]).join(' · ')):'—')+'</div>';
+ const caps=OV.capabilities||{};const ck=Object.keys(caps);
+ if(ck.length)html+='<h3 class="pf-h3">Capabilities</h3><div class="chips">'+ck.map(k=>'<span class="chip'+(caps[k]===true?'':' warnc')+'">'+esc(k)+': '+yn(caps[k])+'</span>').join('')+'</div>';
+ el.innerHTML=html;}
+
+// ---------- strategy registry
+function renderStrat(){
+ const el=$('#strat-body');const items=(STR&&STR.items)||[];
+ el.innerHTML=dataTable('Strategy registry',['Strategy','Asset classes','State','Implementation','Version','Paper'],items,s=>{
+  const m=s.manifest||null;
+  return [esc(String(s.name||s.strategy_id||''))+'<span class="pf-sub">'+esc(String(s.strategy_id||''))+'</span>',
+   esc((s.asset_classes||[]).join(', ')),
+   s.installed===true?'<span class="badge pass">Installed</span>':'<span class="badge na">Planned</span>',
+   '<span class="pf-impl">'+esc(tr(IMPL[s.implementation]||String(s.implementation||'unknown')))+'</span>',
+   m&&m.version?esc(String(m.version)):'—',
+   yn(s.paper_supported)];},'no strategies returned');
+ const bl=(STR&&STR.blockers)||[];
+ if(bl.length)el.innerHTML+='<p class="small pf-wrap">API blockers: '+esc(bl.join(' · '))+'</p>';}
+
+// ---------- registered runs
+function renderRuns(){
+ const el=$('#runs-body');let items=((RNS&&RNS.items)||[]).slice();
+ items.sort((a,b)=>String(b.generated_at||'').localeCompare(String(a.generated_at||'')));
+ el.innerHTML=dataTable('Registered runs',['Generated','Run','Context hash','Strategy','Validation'],items,r=>[
+  tx(r.generated_at),'<code>'+esc(cut(r.run_id,24))+'</code>',hashHTML('context hash of run '+String(r.run_id||''),r.context_hash),
+  tx(r.strategy_id),tx(r.validation_status)],'no runs registered');}
+
+// ---------- risk + attribution: the canonical metrics map only. A fraction is never printed raw.
+function metricRow(m){
+ // every canonical metric carries its own unit, window and sample size; all three are shown next to the number
+ const unit=String(m.unit||''),lines=[];
+ lines.push(esc(String(m.window||'?'))+' window · '+tx(m.window_sessions)+' sessions · '+tx(m.observations)+' observations');
+ if(m.horizon_days!=null||m.confidence_level!=null){
+  const c=pctOf(m.confidence_level,1);
+  lines.push((m.horizon_days!=null?('horizon '+tx(m.horizon_days)+'-day'):'')+(m.horizon_days!=null&&c?' · ':'')+(c?('confidence '+esc(c)):''));}
+ if(m.benchmark!=null)lines.push('benchmark '+tx(m.benchmark)+(m.annualization_sessions!=null?(' · annualised over '+tx(m.annualization_sessions)+' sessions'):''));
+ if(m.benchmark_kind!=null||m.benchmark_source!=null)lines.push('benchmark kind '+tx(m.benchmark_kind)+' · benchmark source '+tx(m.benchmark_source));
+ if(m.estimator!=null)lines.push('estimator '+tx(m.estimator));
+ const ci=m.confidence_interval;
+ if(ci&&ci.available===true){const lo=pctOf(ci.lower),hi=pctOf(ci.upper),cl=pctOf(ci.confidence_level,1);
+  lines.push((cl?esc(cl)+' interval ':'interval ')+(lo&&hi?(esc(lo)+' to '+esc(hi)):'—')+(ci.method?(' · '+esc(String(ci.method))):''));}
+ return {unit:unit,lines:lines};}
+function metricTile(key,label,rk){
+ const payload=rk.payload,m=(payload&&payload.metrics&&payload.metrics[key])||null;
+ const v=rk.available===true&&m?pctOf(m.value):null;
+ if(v==null)return '<div class="pf-tile pf-tile-off"><div class="l">'+esc(label)+'</div><div class="v">unavailable</div>'+
+  '<div class="d">'+esc(String(rk.reason||'the platform risk interface did not return this metric'))+'</div>'+
+  '<div class="d"><code>'+esc(key)+'</code> · <a href="/risk">Risk workbench</a></div></div>';
+ const r=metricRow(m);
+ return '<div class="pf-tile"><div class="l">'+esc(label)+'</div><div class="v">'+esc(v)+'</div>'+
+  '<div class="d">'+esc(UNITS[r.unit]||r.unit||'')+' · unit <code>'+esc(r.unit)+'</code></div>'+
+  r.lines.filter(Boolean).map(x=>'<div class="d">'+x+'</div>').join('')+'</div>';}
+// binding, construction scope, lineage and — when the metrics do not exist — the reason and the holdings that limit it.
+// Shown whether or not metrics are available: an unavailable answer still has to be auditable.
+function riskContext(p){
+ if(!p)return '';
+ const cs=p.construction||{},bs=cs.basis||{},li=p.lineage||{},un=p.unavailable||null,bd=p.binding||{};
+ let h='<h3 class="pf-h3">Construction scope</h3>'+kvs([
+  kv('algorithm scope',tx(cs.name)+'<span class="pf-sub">'+tx(bs.algorithm_identity)+'</span>'),
+  kv('landed weights',tx(cs.source_construction)+'<span class="pf-sub">'+tx(bs.landed_weights_source)+'</span>'),
+  kv('layer',tx(cs.layer)),kv('requested window',tx(cs.window)+' · '+tx(cs.window_sessions)+' sessions'),
+  kv('weight identity',hashHTML('portfolio weight identity',cs.weight_identity))]);
+ h+='<p class="small pf-wrap">The <b>algorithm scope</b> is the construction the frozen run names. The <b>landed weights</b> are the executable column the workbench actually priced. '+
+  'They are separate facts and are not interchangeable'+(bs.detail?': '+esc(String(bs.detail)):'')+'.</p>';
+ h+='<h3 class="pf-h3">Binding</h3>'+kvs([kv('payload schema',tx(p.schema_version)),kv('run_id','<code class="pf-wrap">'+tx(bd.run_id)+'</code>'),
+  kv('context_hash',hashHTML('risk binding context hash',bd.context_hash)),kv('as_of',tx(bd.as_of)),
+  kv('strategy',tx(bd.strategy_id)+' '+tx(bd.strategy_version)),kv('portfolio',tx(bd.portfolio_id))]);
+ const fd=li.finality_detail||{};
+ h+='<h3 class="pf-h3">Calculation lineage</h3>'+kvs([
+  kv('complete',li.complete===true?'<span class="badge pass">complete</span>':'<span class="badge fail">incomplete</span>'),
+  kv('data_snapshot_hash',hashHTML('data snapshot hash',li.data_snapshot_hash)),
+  kv('portfolio_weights_hash',hashHTML('portfolio weights hash',li.portfolio_weights_hash)),
+  kv('calculator_hash',hashHTML('calculator hash',li.calculator_hash)),
+  kv('calculation_sample_hash',hashHTML('calculation sample hash',li.calculation_sample_hash)),
+  kv('config_hash',hashHTML('config hash',li.config_hash)),
+  kv('asof',tx(li.asof)),kv('acquired_at',tx(li.acquired_at)),
+  kv('finality',tx(li.finality)+(fd.confirmed_through?'<span class="pf-sub">confirmed through '+tx(fd.confirmed_through)+'</span>':'')),
+  kv('frozen run reconciliation',hashHTML('frozen run reconciliation',li.frozen_run_reconciliation)),
+  kv('frozen inputs consumed',li.frozen_inputs_consumed===true?'<span class="badge pass">yes</span>':'<span class="badge fail">'+yn(li.frozen_inputs_consumed)+'</span>'),
+  kv('frozen_input_binding_hash',hashHTML('frozen input binding hash',li.frozen_input_binding_hash)),
+  kv('input_manifest_hash',hashHTML('risk input manifest hash',li.input_manifest_hash)),
+  kv('legacy_data_manifest_hash',hashHTML('legacy data manifest hash',li.legacy_data_manifest_hash)+
+   '<span class="pf-sub">legacy pipeline manifest — not a content-addressed lineage</span>')]);
+ if(li.complete!==true&&li.reason)h+='<p class="small pf-wrap">'+esc(String(li.reason))+'.</p>';
+ const fz=li.frozen_datasets;
+ if(fz){h+='<h3 class="pf-h3">Frozen risk inputs</h3>'+kvs([
+   kv('complete',fz.complete===true?'<span class="badge pass">complete</span>':'<span class="badge fail">incomplete</span>'),
+   kv('binding_hash',hashHTML('frozen dataset binding hash',fz.binding_hash)),
+   kv('as_of',tx(fz.as_of)),kv('acquired_by',tx(fz.acquired_by))])+
+  roleGrid(fz.required_roles||[],fz.dataset_versions||{});
+  if(fz.complete!==true&&fz.reason)h+='<p class="small pf-wrap">'+esc(String(fz.reason))+'.</p>';}
+ if(!un)return h;
+ h+='<h3 class="pf-h3">Why the four metrics do not exist</h3>'+
+  '<div class="pf-alert2"><b>'+tx(un.code)+'</b> — '+esc(String(un.reason||''))+'</div>'+
+  kvs([kv('requested window',tx(un.window)+' · '+tx(un.window_sessions)+' sessions'),kv('layer',tx(un.layer)),
+   kv('span requested',tx(un.span_start)+' → '+tx(un.span_end)),kv('sessions available',tx(un.available_sessions)),
+   kv('trailing uninterrupted sessions',tx(un.trailing_uninterrupted_sessions)),kv('limiting holding',tx(un.limiting_holding)),
+   kv('shorter window or substitute',un.no_shorter_window_or_substitute===true
+    ?'<span class="badge pass">refused — no fallback sample was used</span>':yn(un.no_shorter_window_or_substitute))]);
+ h+='<p class="small pf-wrap">The '+tx(un.window)+' window was <b>not</b> shortened and no substitute series was used. '+
+  'The four metrics simply do not exist for this book at the requested sample, which is why every tile above reads unavailable rather than blank.</p>';
+ const lh=un.limiting_holdings||[];
+ h+='<h3 class="pf-h3">Limiting holdings ('+lh.length+')</h3>'+
+  dataTable('Limiting holdings',['Ticker','First bar','Required start','Reason'],lh,r=>[
+   tx(r.ticker),tx(r.first_bar),tx(r.required_start),'<span class="pf-wrap">'+tx(r.reason)+'</span>'],'no limiting holdings were reported');
+ return h;}
+function renderRisk(){
+ const el=$('#risk-body');
+ if(!RSK){el.innerHTML='';return;}
+ const rk=RSK.risk||{},ac=rk.adapter_contract||{},known=METRICS.map(m=>m[0]);
+ const extra=(ac.required_metric_keys||[]).filter(k=>known.indexOf(k)<0);
+ const tiles=METRICS.map(m=>metricTile(m[0],m[1],rk)).concat(extra.map(k=>metricTile(k,k,rk))).join('');
+ let html='<div class="pf-tiles">'+tiles+'</div>';
+ html+=riskContext(rk.payload);
+ html+='<p class="note pf-wrap">Risk interface: available '+yn(rk.available)+(rk.reason?(' · reason given by the API: '+esc(String(rk.reason))):'')+
+  ' · construction endpoint declared by the API: <code>'+esc(String(rk.construction_endpoint||'—'))+'</code>'+
+  (ac.payload_schema_version?(' · adapter contract '+esc(String(ac.payload_schema_version))+' / binding '+esc(String(ac.binding_schema_version||'—'))):'')+'. '+
+  'Fractions are shown as percentages with their unit, window and sample size. Per-construction VaR, expected shortfall and tracking error that already exist are on the '+
+  '<a href="/risk">Risk workbench</a>; nothing from that page is copied here.</p>';
+ const at=RSK.attribution;
+ html+='<h3 class="pf-h3">Attribution</h3>';
+ if(!at){html+='<div class="empty">The API returned no attribution object'+(RSK.run_id?'':' (there is no frozen run context)')+'.</div>';}
+ else{
+  html+=kvs([kv('run_id','<code class="pf-wrap">'+tx(at.run_id)+'</code>'),kv('strategy_id',tx(at.strategy_id)),kv('portfolio_id',tx(at.portfolio_id)),
+   kv('as_of',tx(at.as_of)),kv('validation_status','<span class="badge na">'+tx(at.validation_status)+'</span>'),kv('reason','<span class="pf-wrap">'+tx(at.reason)+'</span>')]);
+  const rows=at.attributions||[];
+  html+=rows.length?dataTable('Attribution components',['Component','Contribution','Currency','Metadata'],rows,a=>[
+    tx(a.component),tx(a.contribution),tx(a.currency),'<span class="pf-wrap">'+esc(a.metadata==null?'—':(typeof a.metadata==='object'?JSON.stringify(a.metadata):String(a.metadata)))+'</span>'])
+   :'<div class="empty">No attribution components were returned. '+esc(String(at.reason||''))+'</div>';}
+ const bl=(RSK.blockers)||[];
+ if(bl.length)html+='<p class="small pf-wrap">API blockers: '+esc(bl.join(' · '))+'</p>';
+ el.innerHTML=html;}
+
+// The optional external witness. Three states are kept apart: not configured, configured but not synchronized,
+// synchronized. The local .head file is never presented as a witness — it shares the ledger's trust domain.
+function checkpointBlock(x){
+ let h='<h3 class="pf-h3">Independent ledger witness</h3>';
+ if(!x)return h+'<div class="empty">The API returned no external checkpoint status for this session.</div>';
+ const on=x.configured===true,sync=x.synchronized===true;
+ const state=!on?'not configured':(sync?'synchronized':'configured, not synchronized');
+ h+='<div class="chips"><span class="badge '+(!on?'na':(sync?'pass':'fail'))+'">'+esc(state)+'</span>'+
+  (x.independent_trust_domain_required===true?'<span class="chip warnc">independent trust domain required</span>':'')+
+  (x.store_type?'<span class="chip">store '+esc(String(x.store_type))+'</span>':'')+'</div>';
+ h+=kvs([kv('configured',yn(x.configured)),kv('synchronized',yn(x.synchronized)),
+  kv('witness sequence',tx(x.sequence)),kv('witness event_hash',hashHTML('external checkpoint event hash',x.event_hash)),
+  kv('checkpoint_hash',hashHTML('external checkpoint hash',x.checkpoint_hash)),kv('key_id',tx(x.key_id)),
+  kv('witness timestamp',tx(x.timestamp)),
+  kv('local ledger sequence',tx(x.ledger_sequence)),kv('local ledger event_hash',hashHTML('local ledger head hash',x.ledger_event_hash))]);
+ if(x.reason)h+='<div class="pf-alert2">'+esc(String(x.reason))+'</div>';
+ h+='<p class="small pf-wrap">The local <code>.head</code> file sits in the same trust domain as the ledger it summarises, so it is a self-checksum, not a witness. '+
+  'Only a separately administered store counts as independent'+(x.reference_store_is_external_only_if_separately_administered===true?'; the API states that requirement itself.':'.')+
+  (!on?' Nothing outside this process has attested to this ledger.'
+    :(sync?'':' The witness is not synchronized with the local head. It may be missing, ahead, conflicting or invalid — the API reason above says which; this page does not guess.'))+'</p>';
+ return h;}
+
+// ---------- LLM usage & budget: what Market Intel itself spends on LLM API calls (read-only ledger)
+const n0=v=>{const n=Number(v);return v==null||v===''||!isFinite(n)?'—':n.toLocaleString('en-US');};
+function usd(cur,val){return val==null||val===''?'—':esc(String(cur||'USD'))+' '+esc(String(val));}
+function winTxt(s){const n=Number(s);if(!isFinite(n)||n<=0)return 'rolling window length not reported';
+ return (n%3600===0?(n/3600)+'-hour':n%60===0?(n/60)+'-minute':n+'-second')+' rolling window';}
+function progressBar(frac,blocked){const p=Math.max(0,Math.min(100,frac*100));
+ return '<div class="pf-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+p.toFixed(1)+
+  '" aria-valuetext="'+esc(fmt.pct(frac,1))+' of the window token budget used"><i'+(blocked?' class="pf-barb"':'')+' style="width:'+p.toFixed(2)+'%"></i></div>';}
+// The ledger's own recorded spend, never a computed one. Nothing is returned unless cost.status is available,
+// so an incomplete window shows no dollars at all. Field order is the contract's preference order.
+function knownSpend(c,bc){
+ if(!c||c.status!=='available')return null;
+ const src=[[c.usd,'cost.usd'],[c.known_usd,'cost.known_usd'],[bc&&bc.known_used_usd,'budget.cost.known_used_usd']];
+ for(let i=0;i<src.length;i++){const v=src[i][0];
+  if(v!=null&&v!=='')return {value:String(v),field:src[i][1],currency:(c.currency||'USD')};}
+ return null;}
+function renderUsage(){
+ const el=$('#llm-body');
+ if(!USG){el.innerHTML='';return;}
+ const U=USG,b=U.budget||{},t=b.token||{},bc=b.cost||{},c=U.cost||{},tot=U.totals||{},per=U.persistence||{};
+ let h='<p class="note pf-wrap"><b>What this is.</b> Market Intel’s own LLM API calls — event classification, briefs and Ask — as metered in its usage ledger. '+
+  'It is <b>not</b> the token count of an interactive chat session, and it is not a provider invoice.</p>';
+ if(per.status!=='available')h+='<div class="pf-alert2">Usage ledger '+tx(per.status)+(per.reason?': '+esc(String(per.reason)):'')+'. The figures below may be incomplete.</div>';
+ // a block can come from an exhausted window, but equally from missing pricing, unknown usage or an unreadable
+ // ledger, so never promise that waiting for the window to roll forward will clear it
+ if(b.blocked===true)h+='<div class="pf-alert">LLM budget blocked'+((b.reasons||[]).length?': '+esc((b.reasons||[]).join(' · ')):(b.reason?': '+esc(String(b.reason)):''))+
+  '. Metered LLM calls are refused until the reported reasons are resolved.</div>';
+ const used=Number(t.used),lim=Number(t.limit);
+ const frac=(t.configured===true&&isFinite(used)&&isFinite(lim)&&lim>0)?used/lim:null;
+ h+='<div class="pf-goal'+(b.blocked===true?' pf-goalb':'')+'">';
+ if(t.configured===true){
+  h+='<div class="pf-goalh"><span class="pf-goalv">'+n0(t.used)+' / '+n0(t.limit)+'</span>'+
+   (frac==null?'':'<span class="pf-goalp">'+esc(fmt.pct(frac,1))+'</span>')+'</div><div class="pf-goalu">tokens used of the configured window budget</div>';
+  if(frac!=null)h+=progressBar(frac,b.blocked===true);
+  h+='<div class="pf-goald">'+n0(t.remaining)+' remaining · token accounting '+tx(t.status)+
+   (t.status!=='available'?' — some calls in this window have no reported usage':'')+'</div>';
+ }else if(t.configured===false){
+  h+='<div class="pf-goalh"><span class="pf-goalv">Budget not configured</span></div>'+
+   '<div class="pf-goalu">no token limit is set for this deployment, so nothing is capped</div>'+
+   '<div class="pf-goald">Usage is still metered and persisted: '+n0(tot.total_tokens)+' tokens over '+n0(tot.calls)+' call'+(Number(tot.calls)===1?'':'s')+' in the window.</div>';
+ }else{
+  // configured is null: the ledger could not be read, so whether a budget exists is unknown — do not claim either way
+  h+='<div class="pf-goalh"><span class="pf-goalv">Budget state unknown</span></div>'+
+   '<div class="pf-goalu">the usage ledger could not be read, so neither the limit nor the usage can be reported</div>'+
+   '<div class="pf-goald">'+tx(per.reason||b.reason)+'</div>';}
+ h+='<div class="pf-goald">'+tx(b.scope)+' · '+esc(winTxt(b.window_seconds))+' · '+tx(b.window_start)+' → '+tx(b.window_end)+'</div></div>';
+ const ks=knownSpend(c,bc);
+ h+='<h3 class="pf-h3">Cost</h3>';
+ if(ks){
+  // the ledger's own recorded figure, shown whether or not a cost budget exists; this page never prices anything
+  h+=kvs([kv('recorded known cost',esc(ks.currency)+' '+esc(ks.value)+'<span class="pf-sub">ledger field '+esc(ks.field)+'</span>')]
+   .concat(c.known_usd!=null&&String(c.known_usd)!==ks.value?[kv('known_usd',usd(c.currency,c.known_usd))]:[])
+   .concat([kv('calls without a recorded cost',n0(c.unavailable_calls)),kv('current pricing match',tx(c.current_pricing_match))]));
+  h+='<p class="small pf-wrap">Recorded known cost is what the usage ledger itself priced for the calls in this window. It is not a provider invoice, and no price on this page is inferred or estimated.</p>';
+ }else{
+  h+='<div class="pf-tile pf-tile-off"><div class="l">Cost</div><div class="v">unavailable</div>'+
+   '<div class="d">'+tx(c.reason)+'</div><div class="d">'+n0(c.unavailable_calls)+' call(s) carry no recorded cost. No price is inferred here.</div></div>';}
+ // the configured limit is an operator setting, not a measurement; every SPEND figure needs an available cost status
+ const spendOk=ks!=null&&bc.status==='available';
+ if(bc.configured===true){
+  h+=kvs([kv('cost budget',usd(bc.currency,bc.limit_usd)+'<span class="pf-sub">configured limit, not a measured spend</span>'),
+   kv('known used',spendOk?usd(bc.currency,bc.known_used_usd):'— (cost accounting '+tx(ks?bc.status:c.status)+')'),
+   kv('remaining',spendOk&&bc.remaining_usd!=null?usd(bc.currency,bc.remaining_usd):'— (not computable)'),kv('status',tx(bc.status))]);
+ }else if(bc.configured===false){
+  h+='<p class="small pf-wrap">Cost budget not configured: no spend limit is enforced for this deployment'+
+   (ks?'. The recorded known cost above is still what the ledger priced.':'.')+'</p>';
+ }else{
+  // configured is null: the ledger could not be read, so whether a cost budget exists is unknown either way
+  h+='<p class="small pf-wrap">Cost budget state unknown: the usage ledger could not be read, so neither a limit nor a spend can be reported'+
+   (per.reason?' — '+esc(String(per.reason)):(b.reason?' — '+esc(String(b.reason)):''))+'.</p>';}
+ h+='<h3 class="pf-h3">Totals in the window</h3><div class="kpis">'+Kpi('Calls',n0(tot.calls))+Kpi('Input tokens',n0(tot.input_tokens))+
+  Kpi('Output tokens',n0(tot.output_tokens))+Kpi('Cache tokens',n0(tot.cache_tokens))+Kpi('Total tokens',n0(tot.total_tokens))+'</div>';
+ if(U.token_definition)h+='<p class="small pf-wrap">'+esc(String(U.token_definition))+'.</p>';
+ const g=U.by_provider_model_operation||[],rc=U.recent||[];
+ h+='<details class="pf-det"><summary>Provider, model and operation breakdown ('+g.length+') and recent calls ('+rc.length+')</summary><div class="pf-detb">'+
+  dataTable('LLM usage by provider, model and operation',['Provider','Model','Operation','Calls','Input','Output','Cache','Total','Known cost','Cost status'],g,r=>[
+   tx(r.provider),tx(r.model),tx(r.operation),n0(r.calls),n0(r.input_tokens),n0(r.output_tokens),n0(r.cache_tokens),n0(r.total_tokens),
+   r.cost_status==='available'?usd('USD',r.known_cost_usd):'—',
+   r.cost_status==='available'?'<span class="badge pass">available</span>':'<span class="badge na">unavailable ('+n0(r.unavailable_cost_calls)+')</span>'],'no metered calls in the window')+
+  '<h3 class="pf-h3">Recent calls</h3>'+
+  dataTable('Recent LLM calls',['When','Provider','Model','Operation','Status','Usage reported','Total tokens','Cost'],rc,r=>{
+   const rcst=r.cost||{};
+   return [tx(r.occurred_at),tx(r.provider),tx(r.model),tx(r.operation),
+    r.status==='complete'?'<span class="badge pass">complete</span>':'<span class="badge fail">'+tx(r.status)+'</span>',
+    yn(r.usage_reported),n0(r.total_tokens),
+    rcst.status==='available'?usd(rcst.currency,rcst.usd):('unavailable<span class="pf-sub">'+tx(rcst.reason)+'</span>')];},'no calls recorded yet')+
+  '</div></details>';
+ h+='<p class="small pf-wrap">schema '+tx(U.schema_version)+' · generated '+tx(U.generated_at)+' · persistence '+tx(per.status)+' ('+tx(per.backend)+').</p>';
+ el.innerHTML=h;}
+
+// ---------- paper ledger
+function selSession(){const l=(PAP&&PAP.sessions)||[];for(let i=0;i<l.length;i++)if(l[i].session_id===SEL)return l[i];return null;}
+function renderPaper(){
+ const list=(PAP&&PAP.sessions)||[],corrupt=(PAP&&PAP.corrupt_ledgers)||[];
+ let head='';
+ if(PAP)head='<p class="small">'+tx(PAP.active_count)+' active of '+tx(PAP.count)+' virtual session'+(PAP.count===1?'':'s')+'.</p>';
+ $('#sess-list').innerHTML=head+(list.length?('<div class="pf-sessions" role="list">'+list.map(s=>{
+   const on=s.session_id===SEL;
+   return '<button type="button" class="pf-sess'+(on?' on':'')+'" data-sid="'+esc(String(s.session_id))+'" aria-pressed="'+(on?'true':'false')+'">'+
+    '<b>'+esc(String(s.session_id))+'</b>'+
+    '<span>'+ui(s.mode)+' · kill switch '+(s.kill_switch_active===true?'ACTIVE':'not active')+'</span>'+
+    '<span>equity '+tx(s.equity)+' · virtual cash '+tx(s.cash)+'</span>'+
+    '<span>as-of '+tx(s.asof)+'</span></button>';}).join('')+'</div>')
+  :'<div class="empty">No virtual paper sessions exist yet.</div>')+
+  (corrupt.length?('<h3 class="pf-h3">Corrupt ledgers ('+corrupt.length+')</h3><ul class="pf-list pf-bad">'+
+   corrupt.map(c=>'<li><code>'+esc(String(c.session_id))+'</code> — '+esc(String(c.error))+'</li>').join('')+'</ul>'):'');
+ const s=selSession();
+ $('#sess-detail').innerHTML=s?sessionDetail(s):(list.length?'<div class="empty">Select a session above to see its ledger.</div>':'');}
+function sessionDetail(s){
+ let h='<h3 class="pf-h3">Session '+esc(String(s.session_id))+'</h3>';
+ h+='<div class="chips">'+
+  '<span class="chip">'+ui(s.status)+'</span><span class="chip">'+ui(s.mode)+'</span>'+
+  '<span class="chip'+(s.kill_switch_active===true?' bad':'')+'">kill switch '+(s.kill_switch_active===true?'ACTIVE':'not active')+'</span>'+
+  '<span class="chip">'+ui(s.validation_status)+'</span><span class="chip">'+ui(s.actionability)+'</span>'+
+  '<span class="chip">as-of '+tx(s.asof)+'</span></div>';
+ if(s.kill_switch_reason)h+='<p class="note pf-wrap">Kill-switch reason: '+esc(String(s.kill_switch_reason))+'</p>';
+ if(s.wording)h+='<p class="note pf-wrap">'+esc(String(s.wording))+'</p>';
+ const bd=s.binding;
+ h+='<h3 class="pf-h3">Fixed book binding</h3>'+(bd?kvs([kv('workspace_id',tx(bd.workspace_id)),kv('strategy_id',tx(bd.strategy_id)),kv('portfolio_id',tx(bd.portfolio_id))])
+  :'<div class="empty">This ledger carries no book binding.</div>')+
+  '<p class="small pf-wrap">The binding is fixed for the life of the session: runs may only advance inside this book, and an order from a different frozen run or context is refused.</p>';
+ const lh=s.ledger_head||null;
+ h+='<h3 class="pf-h3">Append-only ledger head</h3>'+kvs([
+  kv('sequence',tx(lh&&lh.sequence)),kv('event_hash',hashHTML('ledger head event hash',lh&&lh.event_hash)),
+  kv('timestamp',tx(lh&&lh.timestamp)),kv('checkpoint',tx(lh&&lh.checkpoint_path)),
+  kv('event_count',tx(s.event_count)),kv('operation receipts',tx(s.operation_receipt_count)),kv('open orders',tx(s.open_order_count))]);
+ h+=checkpointBlock(s.external_checkpoint);
+ h+='<div class="kpis">'+Kpi('Virtual cash',tx(s.cash),esc(String(s.currency||'')))+Kpi('Market value',tx(s.market_value))+Kpi('Equity',tx(s.equity))+
+  Kpi('Gross exposure',tx(s.gross_exposure))+Kpi('Gross leverage',tx(s.gross_leverage))+'</div>';
+ const mm=s.missing_marks||[],sm=s.stale_marks||[];
+ if(mm.length||sm.length)h+='<p class="note pf-wrap">'+
+  (mm.length?('missing_marks ('+mm.length+'): '+esc(mm.join(', '))+'. '):'')+
+  (sm.length?('stale_marks ('+sm.length+'): '+esc(sm.join(', '))+' — a mark older than the session’s max quote age, or from another UTC session date. '):'')+
+  'Equity, market value and gross leverage stay blank while any mark is missing or stale; no substitute price is used.</p>';
+ h+='<h3 class="pf-h3">Virtual positions ('+((s.positions||[]).length)+')</h3>'+
+  dataTable('Virtual positions',['Symbol','Quantity','Average cost','Mark','Mark time','Mark status','Market value','Unrealised'],s.positions||[],
+   p=>[tx(p.symbol),tx(p.quantity),tx(p.average_cost),tx(p.mark),tx(p.mark_time),
+    p.mark_status==='current'?'<span class="badge pass">current</span>':'<span class="badge fail">'+ui(p.mark_status)+'</span>',
+    tx(p.market_value),tx(p.unrealized_pnl)],'no virtual positions');
+ h+='<h3 class="pf-h3">Orders ('+((s.orders||[]).length)+')</h3>'+
+  dataTable('Virtual orders',['Order','Symbol','Side','Quantity','Status','Filled','Order time'],s.orders||[],
+   o=>[hashHTML('order id',o.order_id),tx(o.symbol),tx(o.side),tx(o.quantity),ui(o.status),tx(o.filled_quantity),tx(o.order_time)],'no orders');
+ h+='<h3 class="pf-h3">Fills ('+((s.fills||[]).length)+')</h3>'+
+  dataTable('Virtual fills',['Fill','Symbol','Side','Quantity','Price','Total cost','Fill time'],s.fills||[],
+   f=>[hashHTML('fill id',f.fill_id),tx(f.symbol),tx(f.side),tx(f.quantity),tx(f.price),tx(f.total_cost),tx(f.fill_time)],'no fills');
+ const c=s.costs||{};
+ h+='<h3 class="pf-h3">Costs</h3>'+kvs([kv('commission',tx(c.commission)),kv('spread',tx(c.spread)),kv('slippage',tx(c.slippage)),kv('total',tx(c.total))]);
+ const r=s.reconciliation||{};const pd=r.position_differences||{};const pdk=Object.keys(pd);
+ h+='<h3 class="pf-h3">Reconciliation</h3>'+kvs([
+  kv('ok',r.ok===true?'<span class="badge pass">ok</span>':'<span class="badge fail">'+yn(r.ok)+'</span>'),
+  kv('tolerance',tx(r.tolerance)),kv('cash_expected',tx(r.cash_expected)),kv('cash_actual',tx(r.cash_actual)),kv('cash_difference',tx(r.cash_difference)),
+  kv('position_differences',pdk.length?esc(pdk.map(k=>k+' '+pd[k]).join(' · ')):'none')]);
+ return h;}
+// a fraction rendered as a percentage, or null when the API did not send a finite number
+function pctOf(v,d){const n=Number(v);return v==null||v===''||!isFinite(n)?null:fmt.pct(n,d==null?2:d);}
+function renderStep(r){
+ if(!r){$('#step-result').innerHTML='';return;}
+ const nO=(r.orders||[]).length,nF=(r.fills||[]).length,ev=r.sizing_evidence||[],rc=r.operation_receipt||null;
+ // plain words first: what this step actually did to the virtual book
+ let h='<h3 class="pf-h3">Last paper step</h3><p class="note pf-wrap"><b>'+esc(PHASE[r.phase]?tr(PHASE[r.phase]):tr('Phase reported by the API: {phase}',{phase:r.phase||'unknown'}))+'</b> '+
+  nO+' virtual order'+(nO===1?'':'s')+' and '+nF+' fill'+(nF===1?'':'s')+' were recorded against '+tx(r.target_count)+' frozen target'+(r.target_count===1?'':'s')+
+  '. Nothing left the simulation.</p>';
+ h+=kvs([kv('phase','<span class="badge na">'+tx(r.phase)+'</span>'),
+  kv('retroactive_fills_allowed',r.retroactive_fills_allowed===false?'<span class="badge pass">no — fills cannot be back-dated</span>':'<span class="badge fail">'+yn(r.retroactive_fills_allowed)+'</span>'),
+  kv('operation_id',hashHTML('operation id',r.operation_id)),
+  kv('receipt sequence',tx(rc&&rc.sequence)),kv('receipt event_hash',hashHTML('operation receipt event hash',rc&&rc.event_hash)),
+  kv('receipt timestamp',tx(rc&&rc.timestamp)),
+  kv('run_id','<code class="pf-wrap">'+tx(r.run_id)+'</code>'),kv('context_hash',hashHTML('step context hash',r.context_hash)),
+  kv('signal_time',tx(r.signal_time)),kv('order_time',tx(r.order_time)),kv('asof',tx(r.asof)),
+  kv('equity_before',tx(r.equity_before))]);
+ h+='<p class="small pf-wrap">The receipt is the ledger event that makes this step replayable: a repeat of the same request returns this same result instead of stepping again.</p>';
+ if(r.external_checkpoint)h+=checkpointBlock(r.external_checkpoint);
+ // the evidence behind every size stays available, but folded away by default
+ h+='<details class="pf-det"><summary>Sizing evidence and quote lineage ('+ev.length+' instrument'+(ev.length===1?'':'s')+')</summary><div class="pf-detb">'+
+  dataTable('Sizing evidence',['Instrument','Target weight','Sizing equity','Target quantity','Quote','Quote lineage'],ev,e=>{
+   const q=e.quote||{},l=e.quote_lineage||{},p=pctOf(e.target_weight);
+   return [esc(String(e.ticker||e.instrument_id||''))+'<span class="pf-sub">'+esc(String(e.instrument_id||''))+'</span>',
+    tx(e.target_weight)+(p?'<span class="pf-sub">'+esc(p)+'</span>':''),
+    tx(e.sizing_equity)+'<span class="pf-sub">'+esc(String(e.currency||''))+'</span>',
+    tx(e.target_quantity)+(e.multiplier!=null?'<span class="pf-sub">multiplier '+esc(String(e.multiplier))+'</span>':''),
+    'bid '+tx(q.bid)+' · ask '+tx(q.ask)+'<span class="pf-sub">'+esc(String(q.timestamp||''))+'</span>',
+    esc(String(l.source||'—'))+' · '+esc(String(l.finality||'—'))+'<span class="pf-sub">observed '+esc(String(l.observed_at||'—'))+' · acquired '+esc(String(l.acquired_at||'—'))+'</span>'+
+     hashHTML('quote content hash for '+String(e.ticker||''),l.content_hash)];},'the API returned no sizing evidence')+
+  '<h3 class="pf-h3">Quote lineage used by this step ('+((r.quote_lineage||[]).length)+')</h3>'+
+  dataTable('Quote lineage',['Symbol','Observed','Acquired','Finality','Source','Content hash'],r.quote_lineage||[],q=>[
+   tx(q.symbol),tx(q.observed_at),tx(q.acquired_at),tx(q.finality),tx(q.source),hashHTML('quote content hash for '+String(q.symbol||''),q.content_hash)],'no quote lineage returned')+
+  '<h3 class="pf-h3">Orders submitted ('+nO+')</h3>'+
+  dataTable('Step orders',['Order','Symbol','Side','Quantity','Order time'],r.orders||[],o=>[
+   hashHTML('order id',o.order_id),tx(o.symbol),tx(o.side),tx(o.quantity),tx(o.order_time)],'no orders in this step')+
+  '<h3 class="pf-h3">Fills processed ('+nF+')</h3>'+
+  dataTable('Step fills',['Fill','Symbol','Side','Quantity','Price','Fill time'],r.fills||[],f=>[
+   hashHTML('fill id',f.fill_id),tx(f.symbol),tx(f.side),tx(f.quantity),tx(f.price),tx(f.fill_time)],'no fills in this step')+
+  '</div></details>';
+ $('#step-result').innerHTML=h;}
+
+// ---------- button state, derived from the API capabilities and the selected session
+function setBtn(b,on,why){if(!b)return;b.disabled=!on;if(why)b.title=why;else b.removeAttribute('title');}
+function syncButtons(){
+ const caps=(OV&&OV.capabilities)||{},s=selSession();
+ const canStart=caps.paper_ledger===true&&!RO;
+ const canOp=!!s&&s.kill_switch_active!==true&&!RO;
+ setBtn($('#btn-start'),canStart,canStart?'':(RO?'your role is not permitted to operate paper sessions':'the API does not report a paper ledger capability'));
+ setBtn($('#btn-step'),canOp,canOp?(caps.paper_step_ready===true?'':'the backend may refuse this step: it requires confirmed, content-addressed quote versions')
+  :(RO?'your role is not permitted to operate paper sessions':(s?'the selected session has its kill switch active':'select a paper session first')));
+ setBtn($('#btn-kill'),canOp,canOp?'':(RO?'your role is not permitted to operate paper sessions':(s?'the kill switch is already active on this session':'select a paper session first')));
+ $('#gate-note').textContent=gateNote();}
+// The step gate is a quote-binding rule, not a data outage: say so in the operator's words.
+function gateNote(){
+ const caps=(OV&&OV.capabilities)||{},bl=(OV&&OV.blockers)||[],p=[];
+ p.push('Step binds a confirmed, content-addressed quote version for every symbol in the book.');
+ if(caps.paper_step_requires_quote_versions===true)
+  p.push('This deployment has no standing confirmed-quote adapter, so a step without pinned quote_versions is refused by the backend — a refusal to price, not missing data on this page.');
+ if(caps.pinned_confirmed_quote_versions_supported===true)p.push('Pinned quote versions are supported by the API.');
+ p.push('paper_step_ready: '+yn(caps.paper_step_ready)+'.');
+ if(bl.length)p.push('backend gate: '+String(bl[0]));
+ return p.join(' ');}
+
+// ---------- loading
+function showErr(txt){$('#pf-err').textContent=txt||'';}
+async function detailOf(url){try{const r=await fetch(url);const j=await r.json();const d=j.detail!=null?j.detail:j.error;
+ return typeof d==='string'?d:(d==null?'':JSON.stringify(d));}catch(e){return '';}}
+async function apiGet(url,key){
+ try{return await fetchJSON(url,key);}
+ catch(e){
+  if(e&&e.stale)throw e;
+  const p=errParts(e);
+  if(p.code===403){const d=await detailOf(url);throw new Error('403 '+(d||p.detail));}
+  throw e;}}
+// A background refresh keeps the current content on screen: the skeleton is only for a panel that has
+// nothing yet, so a 60-second poll never flashes loading/empty over data the operator is reading.
+function beginLoad(sel,have){if(!have)setPanel(sel,'loading');}
+async function loadOverview(){beginLoad('#ans-panel',OV);beginLoad('#run-panel',OV);
+ try{const previousRun=OV?.current_run?.run_id;OV=await apiGet(API.ov,'ov');lastOk=new Date();stale=false;renderStrip();renderAnswers();renderRun();
+  if(previousRun&&OV?.current_run?.run_id&&previousRun!==OV.current_run.run_id){loadRuns();loadRisk();loadStrategies();}
+  setPanel('#ans-panel','fresh','');setPanel('#run-panel','fresh','');}
+ catch(e){if(e&&e.stale)return;OV=null;stale=true;renderStrip();renderAnswers();renderRun();
+  setPanel('#ans-panel','error',panelMsg(e),loadOverview);setPanel('#run-panel','error',panelMsg(e),loadOverview);}
+ finally{hdr();syncButtons();}}
+async function loadStrategies(){beginLoad('#strat-panel',STR);
+ try{STR=await apiGet(API.st,'st');renderStrat();setPanel('#strat-panel',(STR.items||[]).length?'fresh':'empty','');}
+ catch(e){if(e&&e.stale)return;STR=null;renderStrat();setPanel('#strat-panel','error',panelMsg(e),loadStrategies);}}
+async function loadRuns(){beginLoad('#runs-panel',RNS);
+ try{RNS=await apiGet(API.rn+RUNS_Q,'rn');renderRuns();setPanel('#runs-panel',(RNS.items||[]).length?'fresh':'empty','');}
+ catch(e){if(e&&e.stale)return;RNS=null;renderRuns();setPanel('#runs-panel','error',panelMsg(e),loadRuns);}}
+async function loadRisk(){beginLoad('#risk-panel',RSK);
+ try{RSK=await apiGet(API.rk,'rk');renderRisk();setPanel('#risk-panel','fresh','');}
+ catch(e){if(e&&e.stale)return;RSK=null;renderRisk();setPanel('#risk-panel','error',panelMsg(e),loadRisk);}}
+async function loadPaper(){beginLoad('#paper-panel',PAP);
+ try{PAP=await apiGet(API.pa,'pa');const l=PAP.sessions||[];
+  if(!SEL||!l.some(x=>x.session_id===SEL)){const open=l.filter(x=>x.kill_switch_active!==true);SEL=((open[0]||l[0])||{}).session_id||null;}
+  renderPaper();setPanel('#paper-panel',l.length?'fresh':'empty',l.length?'':'no virtual paper sessions yet');}
+ catch(e){if(e&&e.stale)return;PAP=null;renderPaper();setPanel('#paper-panel','error',panelMsg(e),loadPaper);}
+ finally{syncButtons();}}
+async function loadUsage(){beginLoad('#llm-panel',USG);
+ try{USG=await apiGet(API.lu,'lu');renderUsage();setPanel('#llm-panel','fresh','');}
+ catch(e){if(e&&e.stale)return;USG=null;renderUsage();setPanel('#llm-panel','error',panelMsg(e),loadUsage);}}
+function loadAll(spoken){
+ Promise.all([loadOverview(),loadStrategies(),loadRuns(),loadRisk(),loadPaper(),loadUsage()]).then(()=>{
+  hdr();syncButtons();
+  if(spoken)announce('Platform console refreshed. '+(((OV&&OV.blockers)||[]).length)+' blockers reported.');});}
+
+// ---------- mutations. The backend is the gate: its refusal text is shown verbatim, never softened.
+function onMutErr(e){
+ const p=errParts(e);
+ if(p.code===403){RO=true;const n=$('#ro-note');n.hidden=false;
+  n.textContent='Your role is not permitted to operate paper sessions — '+p.detail;
+  announce('Read-only: '+p.detail);}
+ showErr(p.detail||String((e&&e.message)||e));
+ Toast.bad(p.detail||'the request was refused');
+ syncButtons();}
+async function startSession(ev){
+ ev.preventDefault();if(RO)return;
+ const b=$('#btn-start');showErr('');
+ // allow_short / allow_margin are always false: the API refuses true until borrow, financing, collateral and
+ // corporate-action accounting exist, so the console never offers an option the platform would reject.
+ // currency is fixed: the API is USD-only until quote-currency and point-in-time FX accounting exist
+ const body={starting_cash:($('#f-cash').value||'').trim()||'100000',currency:'USD',
+  allow_short:false,allow_margin:false,
+  max_gross_leverage:($('#f-lev').value||'').trim()||'1',max_quote_age_seconds:Number($('#f-age').value||300)};
+ busy(b,true,'Starting…');
+ try{const r=await platformPost(API.ps,body,'paper-session-create');const sid=((r||{}).session||{}).session_id;if(sid)SEL=sid;
+  const oc=mutationOutcome(r,'paper session');
+  if(oc===COMMITTED_STATE){Toast.ok('Virtual paper session created');announce('Virtual paper session '+(sid||'')+' created');}
+  else if(oc===PENDING_STATE)Toast.ok('Session committed; witness checkpoint pending');
+  else Toast.bad('Unresolved: the API returned an unrecognised mutation state');
+  await loadPaper();await loadOverview();}
+ catch(e){onMutErr(e);}
+ finally{busy(b,false);syncButtons();}}
+async function stepSession(){
+ if(RO||!SEL)return;const b=$('#btn-step');showErr('');
+ const body={};const cr=OV&&OV.current_run;if(cr&&cr.run_id)body.run_id=cr.run_id;
+ busy(b,true,'Stepping…');
+ try{const r=await platformPost(stepURL(SEL),body,'paper-session-step');renderStep(r);
+  const oc=mutationOutcome(r,'paper step');
+  if(oc===COMMITTED_STATE){Toast.ok('Paper step recorded');announce('Paper step recorded: '+((r.orders||[]).length)+' orders, '+((r.fills||[]).length)+' fills');}
+  else if(oc===PENDING_STATE)Toast.ok('Step committed; witness checkpoint pending');
+  else Toast.bad('Unresolved: the API returned an unrecognised mutation state');
+  await loadPaper();await loadOverview();}
+ catch(e){onMutErr(e);}
+ finally{busy(b,false);syncButtons();}}
+function openKill(){
+ if(RO||!SEL)return;killFrom=$('#btn-kill');showErr('');
+ const d=$('#kill-dlg'),r=$('#kill-reason');r.value='';r.setCustomValidity('');
+ if(d.showModal)d.showModal();else d.setAttribute('open','');
+ setTimeout(()=>{try{r.focus();}catch(e){}},0);}
+function restoreFocus(){if(killFrom&&killFrom.focus){try{killFrom.focus();}catch(e){}}}
+function closeKill(){const d=$('#kill-dlg');if(d.close)d.close();else d.removeAttribute('open');restoreFocus();}
+async function confirmKill(ev){
+ ev.preventDefault();
+ const r=$('#kill-reason'),reason=(r.value||'').trim();
+ if(!reason){r.setCustomValidity(tr('A reason is required to activate the kill switch.'));if(r.reportValidity)r.reportValidity();return;}
+ r.setCustomValidity('');
+ const b=$('#kill-confirm');busy(b,true,'Activating…');
+ try{const kr=await platformPost(killURL(SEL),{reason:reason},'paper-session-kill');closeKill();
+  const oc=mutationOutcome(kr,'kill switch');
+  if(oc===COMMITTED_STATE){Toast.ok('Kill switch activated');announce('Kill switch activated on paper session '+SEL);}
+  else if(oc===PENDING_STATE)Toast.ok('Kill switch committed; witness checkpoint pending');
+  else Toast.bad('Unresolved: the API returned an unrecognised mutation state');
+  await loadPaper();await loadOverview();}
+ catch(e){closeKill();onMutErr(e);}
+ finally{busy(b,false);syncButtons();}}
+
+// ---------- wiring: delegated clicks only, no inline handlers anywhere
+document.addEventListener('click',ev=>{
+ const el=ev.target&&ev.target.closest?ev.target.closest('[data-copy],[data-toggle],[data-act],[data-sid]'):null;
+ if(!el)return;
+ if(el.hasAttribute('data-copy')){const c=document.getElementById(el.getAttribute('data-copy'));if(c)doCopy(c.getAttribute('data-full'));return;}
+ if(el.hasAttribute('data-toggle')){toggleHash(el);return;}
+ if(el.hasAttribute('data-sid')){SEL=el.getAttribute('data-sid');renderPaper();syncButtons();announce('Selected paper session '+SEL);return;}
+ if(el.getAttribute('data-act')==='refresh')loadAll(true);});
+$('#start-form').addEventListener('submit',startSession);
+$('#btn-step').addEventListener('click',stepSession);
+$('#btn-kill').addEventListener('click',openKill);
+$('#kill-cancel').addEventListener('click',closeKill);
+$('#kill-form').addEventListener('submit',confirmKill);
+$('#kill-reason').addEventListener('input',()=>$('#kill-reason').setCustomValidity(''));
+$('#kill-dlg').addEventListener('close',restoreFocus);
+$('#kill-dlg').addEventListener('cancel',restoreFocus);
+document.addEventListener('languagechange',()=>{hdr();renderStrip();renderIdem();renderAnswers();renderRun();renderStrat();renderRuns();renderRisk();renderUsage();renderPaper();syncButtons();});
+hdr();renderStrip();renderIdem();loadAll(false);
+visiblePoll(()=>{loadOverview();loadPaper();loadUsage();},60000);
+</script>
+</body></html>
